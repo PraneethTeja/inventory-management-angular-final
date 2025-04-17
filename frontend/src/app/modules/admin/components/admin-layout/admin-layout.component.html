@@ -1,0 +1,45 @@
+<div class="admin-layout">
+  <aside class="sidebar" [class.collapsed]="!sidebarExpanded" (mouseenter)="expandSidebar()"
+    (mouseleave)="collapseSidebar()">
+    <div class="sidebar-header">
+      <h2 [class.hidden]="!sidebarExpanded">Admin Panel</h2>
+      <div class="user-info" *ngIf="user$ | async as user">
+        <div class="user-avatar">
+          <span>{{ user.displayName.charAt(0) }}</span>
+        </div>
+        <div class="user-details" [class.hidden]="!sidebarExpanded">
+          <div class="user-name">{{ user.displayName }}</div>
+          <div class="user-role">{{ user.role }}</div>
+        </div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <ul>
+        <li *ngFor="let item of navItems">
+          <a [routerLink]="item.route" routerLinkActive="active">
+            <i class="material-icons">{{ item.icon }}</i>
+            <span [class.hidden]="!sidebarExpanded">{{ item.label }}</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="logout-btn" (click)="logout()">
+        <i class="material-icons">exit_to_app</i>
+        <span [class.hidden]="!sidebarExpanded">Logout</span>
+      </button>
+    </div>
+  </aside>
+
+  <main class="content">
+    <header class="content-header">
+      <h1>Jewelry Shop Admin</h1>
+    </header>
+
+    <div class="content-body">
+      <router-outlet></router-outlet>
+    </div>
+  </main>
+</div>

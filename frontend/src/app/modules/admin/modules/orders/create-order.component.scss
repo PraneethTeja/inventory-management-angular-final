@@ -1,0 +1,582 @@
+// Main container styles
+.create-order-page {
+  padding: 1rem;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  h2 {
+    margin: 0;
+    font-size: 1.5rem;
+  }
+}
+
+// Tab navigation styles
+.tab-navigation {
+  display: flex;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid #e0e0e0;
+  
+  .tab-btn {
+    padding: 0.75rem 1rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+    color: #666;
+    position: relative;
+    
+    &.active {
+      color: #1976d2;
+      
+      &:after {
+        content: '';
+        position: absolute;
+        bottom: -1px;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background-color: #1976d2;
+      }
+    }
+
+    &:hover:not(.active) {
+      background-color: rgba(25, 118, 210, 0.05);
+    }
+  }
+}
+
+// Products grid
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.product-card {
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+  transition: box-shadow 0.2s, transform 0.2s;
+  background-color: white;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  &:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+  }
+
+  .product-image {
+    height: 160px;
+    overflow: hidden;
+    position: relative;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  .product-info {
+    padding: 0.75rem;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+
+    h3 {
+      margin: 0 0 0.5rem;
+      font-size: 1rem;
+    }
+
+    .price {
+      font-weight: bold;
+      color: #212121;
+      font-size: 1.1rem;
+      margin-top: auto;
+    }
+  }
+
+  .product-actions {
+    padding: 0.75rem;
+    border-top: 1px solid #f0f0f0;
+
+    button {
+      width: 100%;
+      padding: 0.5rem;
+      background-color: #1976d2;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+
+      &:hover {
+        background-color: #1565c0;
+      }
+    }
+  }
+}
+
+// Order summary section
+.order-section {
+  background-color: white;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1.5rem;
+  
+  .section-header {
+    padding: 1rem;
+    border-bottom: 1px solid #e0e0e0;
+    
+    h3 {
+      margin: 0;
+      font-size: 1.2rem;
+    }
+  }
+  
+  .section-content {
+    padding: 1rem;
+  }
+}
+
+// Order items list
+.order-items {
+  margin-bottom: 1rem;
+  
+  .item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #f0f0f0;
+    
+    &:last-child {
+      border-bottom: none;
+    }
+    
+    .item-image {
+      width: 60px;
+      height: 60px;
+      margin-right: 1rem;
+      
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 4px;
+      }
+    }
+    
+    .item-details {
+      flex: 1;
+      
+      .item-name {
+        font-weight: 500;
+        margin-bottom: 0.25rem;
+      }
+      
+      .item-category {
+        font-size: 0.85rem;
+        color: #666;
+      }
+      
+      .combo-details {
+        font-size: 0.85rem;
+        margin-top: 0.25rem;
+        color: #1976d2;
+      }
+    }
+    
+    .item-price {
+      text-align: right;
+      margin-right: 1rem;
+      
+      .price {
+        font-weight: 500;
+      }
+      
+      .unit-price {
+        font-size: 0.85rem;
+        color: #666;
+      }
+    }
+    
+    .item-quantity {
+      display: flex;
+      align-items: center;
+      
+      button {
+        width: 30px;
+        height: 30px;
+        border: 1px solid #e0e0e0;
+        background: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        
+        &:hover {
+          background-color: #f5f5f5;
+        }
+      }
+      
+      span {
+        width: 30px;
+        text-align: center;
+      }
+    }
+    
+    .item-actions {
+      margin-left: 1rem;
+      
+      button {
+        background: none;
+        border: none;
+        color: #f44336;
+        cursor: pointer;
+        
+        &:hover {
+          text-decoration: underline;
+        }
+      }
+    }
+  }
+}
+
+// Order summary
+.order-summary {
+  .summary-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    
+    &.total {
+      font-weight: bold;
+      font-size: 1.1rem;
+      border-top: 1px solid #e0e0e0;
+      padding-top: 1rem;
+      margin-top: 0.5rem;
+    }
+  }
+}
+
+// Form styles
+.form-group {
+  margin-bottom: 1rem;
+  
+  label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+  }
+  
+  input, select, textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: inherit;
+    transition: border-color 0.2s;
+    
+    &:focus {
+      border-color: #1976d2;
+      outline: none;
+    }
+  }
+  
+  .error-hint {
+    color: #f44336;
+    font-size: 0.85rem;
+    margin-top: 0.25rem;
+  }
+}
+
+.form-actions {
+  margin-top: 1.5rem;
+  text-align: right;
+  
+  button {
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    
+    &.cancel-btn {
+      background: none;
+      border: 1px solid #e0e0e0;
+      margin-right: 0.75rem;
+      
+      &:hover {
+        background-color: #f5f5f5;
+      }
+    }
+    
+    &.submit-btn {
+      background-color: #1976d2;
+      color: white;
+      border: none;
+      
+      &:hover {
+        background-color: #1565c0;
+      }
+      
+      &:disabled {
+        background-color: #bdbdbd;
+        cursor: not-allowed;
+      }
+    }
+  }
+}
+
+// Create Combo Modal
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  
+  .modal-content {
+    background-color: white;
+    border-radius: 4px;
+    width: 90%;
+    max-width: 800px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .modal-header {
+    padding: 1rem;
+    border-bottom: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    
+    h2 {
+      margin: 0;
+      font-size: 1.25rem;
+    }
+    
+    .close-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1.5rem;
+      line-height: 1;
+    }
+  }
+  
+  .modal-body {
+    padding: 1rem;
+  }
+}
+
+// Combo selection grid
+.combo-selection {
+  margin-bottom: 1.5rem;
+  
+  h3 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+  }
+  
+  .selection-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1rem;
+  }
+  
+  .selection-card {
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    padding: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    
+    &.selected {
+      border-color: #1976d2;
+      background-color: rgba(25, 118, 210, 0.05);
+    }
+    
+    &:hover:not(.selected) {
+      border-color: #bdbdbd;
+    }
+    
+    .selection-image {
+      height: 100px;
+      margin-bottom: 0.5rem;
+      
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 2px;
+      }
+    }
+    
+    .selection-name {
+      font-size: 0.9rem;
+      margin-bottom: 0.25rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .selection-price {
+      font-weight: 500;
+      font-size: 0.85rem;
+    }
+  }
+}
+
+// Add combo button
+.add-combo-btn {
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  background-color: transparent;
+  border: 1px dashed #1976d2;
+  color: #1976d2;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+  
+  i {
+    margin-right: 0.5rem;
+  }
+  
+  &:hover {
+    background-color: rgba(25, 118, 210, 0.05);
+  }
+}
+
+// Status messages
+.error-message {
+  background-color: #ffebee;
+  color: #d32f2f;
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.success-message {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  
+  p {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    font-weight: 500;
+  }
+  
+  // WhatsApp integration styles
+  .whatsapp-options {
+    display: flex;
+    margin-top: 1.5rem;
+    gap: 1rem;
+    
+    button {
+      padding: 0.75rem 1.5rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      
+      &.whatsapp-btn {
+        background-color: #25D366; // WhatsApp brand color
+        color: white;
+        
+        &:hover {
+          background-color: #128C7E; // Darker WhatsApp color
+        }
+        
+        &:disabled {
+          background-color: #A5D6A7;
+          cursor: not-allowed;
+        }
+        
+        &:before {
+          content: '';
+          background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="white" d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"/></svg>');
+          width: 20px;
+          height: 20px;
+          display: inline-block;
+          margin-right: 8px;
+          background-repeat: no-repeat;
+        }
+      }
+      
+      &.view-orders-btn {
+        background-color: #3f51b5; // Indigo color
+        color: white;
+        
+        &:hover {
+          background-color: #303f9f; // Darker indigo
+        }
+      }
+    }
+  }
+}
+
+// Loading indicator
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #1976d2;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1rem;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+}
+
+// Two column layout for larger screens
+@media (min-width: 900px) {
+  .create-order-container {
+    display: flex;
+    gap: 1.5rem;
+    
+    .product-selection {
+      flex: 3;
+    }
+    
+    .order-details {
+      flex: 2;
+    }
+  }
+} 

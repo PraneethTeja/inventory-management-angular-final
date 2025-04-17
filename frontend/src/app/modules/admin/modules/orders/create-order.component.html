@@ -1,0 +1,256 @@
+<div class="create-order-page">
+  <div class="page-header">
+    <h2>Create New Order</h2>
+  </div>
+
+  <!-- Error message -->
+  <div class="error-message" *ngIf="error">{{ error }}</div>
+
+  <!-- Success message -->
+  <div class="success-message" *ngIf="success">
+    <p>{{ success }}</p>
+
+    <!-- WhatsApp options -->
+    <div class="whatsapp-options" *ngIf="showWhatsAppButton">
+      <button class="whatsapp-btn" [disabled]="sendingToWhatsApp" (click)="sendToWhatsApp(createdOrderId)">
+        <span *ngIf="!sendingToWhatsApp">Send to WhatsApp</span>
+        <span *ngIf="sendingToWhatsApp">Sending...</span>
+      </button>
+
+      <button class="view-orders-btn" (click)="navigateToOrders()">View All Orders</button>
+    </div>
+  </div>
+
+  <!-- Loading indicator -->
+  <div class="loading" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>Processing...</p>
+  </div>
+
+  <div class="create-order-container">
+    <!-- Product Selection (Left) -->
+    <div class="product-selection" *ngIf="!isLoading && !success">
+      <!-- Tab Navigation -->
+      <div class="tab-navigation">
+        <button class="tab-btn" [class.active]="activeTab === 'chains'" (click)="changeTab('chains')">
+          Chains
+        </button>
+        <button class="tab-btn" [class.active]="activeTab === 'pendants'" (click)="changeTab('pendants')">
+          Pendants
+        </button>
+        <button class="tab-btn" [class.active]="activeTab === 'create-combo'" (click)="openComboModal()">
+          Create Combo
+        </button>
+      </div>
+
+      <!-- Product Grid - Chains -->
+      <div class="products-grid" *ngIf="activeTab === 'chains'">
+        <div class="product-card" *ngFor="let product of chains">
+          <div class="product-image">
+            <img [src]="product.imageUrl || 'assets/images/placeholder.jpg'" [alt]="product.name">
+          </div>
+          <div class="product-info">
+            <h3>{{ product.name }}</h3>
+            <div class="price">₹{{ product.price }}</div>
+          </div>
+          <div class="product-actions">
+            <button (click)="addItemToOrder(product)">Add to Order</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Product Grid - Pendants -->
+      <div class="products-grid" *ngIf="activeTab === 'pendants'">
+        <div class="product-card" *ngFor="let product of pendants">
+          <div class="product-image">
+            <img [src]="product.imageUrl || 'assets/images/placeholder.jpg'" [alt]="product.name">
+          </div>
+          <div class="product-info">
+            <h3>{{ product.name }}</h3>
+            <div class="price">₹{{ product.price }}</div>
+          </div>
+          <div class="product-actions">
+            <button (click)="addItemToOrder(product)">Add to Order</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Order Details (Right) -->
+    <div class="order-details" *ngIf="!isLoading && !success">
+      <!-- Customer Information -->
+      <div class="order-section">
+        <div class="section-header">
+          <h3>Customer Information</h3>
+        </div>
+        <div class="section-content">
+          <form [formGroup]="customerForm">
+            <div class="form-group">
+              <label for="customerName">Name*</label>
+              <input type="text" id="customerName" formControlName="name" placeholder="Customer name">
+              <div class="error-hint" *ngIf="customerForm.get('name')?.invalid && customerForm.get('name')?.touched">
+                Customer name is required
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="customerEmail">Email*</label>
+              <input type="email" id="customerEmail" formControlName="email" placeholder="customer@example.com">
+              <div class="error-hint" *ngIf="customerForm.get('email')?.invalid && customerForm.get('email')?.touched">
+                Please enter a valid email
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="customerPhone">Phone*</label>
+              <input type="tel" id="customerPhone" formControlName="phone" placeholder="10-digit mobile number">
+              <div class="error-hint" *ngIf="customerForm.get('phone')?.invalid && customerForm.get('phone')?.touched">
+                Please enter a valid 10-digit phone number
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Order Items -->
+      <div class="order-section">
+        <div class="section-header">
+          <h3>Order Items</h3>
+        </div>
+        <div class="section-content">
+          <div class="order-items" *ngIf="orderItems.length > 0">
+            <div class="item" *ngFor="let item of orderItems; let i = index">
+              <div class="item-image">
+                <img [src]="item.product.imageUrl || 'assets/images/placeholder.jpg'" [alt]="item.product.name">
+              </div>
+              <div class="item-details">
+                <div class="item-name">{{ item.product.name }}</div>
+                <div class="item-category">{{ item.product.category | titlecase }}</div>
+                <div class="combo-details" *ngIf="item.isCombo">
+                  Combination: {{ item.pendantProduct.name }} + {{ item.chainProduct.name }}
+                </div>
+              </div>
+              <div class="item-price">
+                <div class="price">₹{{ item.product.price * item.quantity }}</div>
+                <div class="unit-price" *ngIf="item.quantity > 1">₹{{ item.product.price }} each</div>
+              </div>
+              <div class="item-quantity">
+                <button (click)="updateQuantity(i, -1)">-</button>
+                <span>{{ item.quantity }}</span>
+                <button (click)="updateQuantity(i, 1)">+</button>
+              </div>
+              <div class="item-actions">
+                <button (click)="removeItem(i)">Remove</button>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="orderItems.length === 0" class="empty-order">
+            <p>No items in order yet. Add products from the selection.</p>
+          </div>
+
+          <button class="add-combo-btn" (click)="openComboModal()" *ngIf="orderItems.length > 0">
+            <i class="material-icons">add</i> Add Combination
+          </button>
+        </div>
+      </div>
+
+      <!-- Order Notes -->
+      <div class="order-section">
+        <div class="section-header">
+          <h3>Order Notes</h3>
+        </div>
+        <div class="section-content">
+          <form [formGroup]="orderNotesForm">
+            <div class="form-group">
+              <textarea formControlName="notes" rows="3"
+                placeholder="Add any special instructions or notes for this order..."></textarea>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Order Summary -->
+      <div class="order-section">
+        <div class="section-header">
+          <h3>Order Summary</h3>
+        </div>
+        <div class="section-content">
+          <div class="order-summary">
+            <div class="summary-row">
+              <div>Subtotal</div>
+              <div>₹{{ subtotal }}</div>
+            </div>
+            <div class="summary-row">
+              <div>Tax (18% GST)</div>
+              <div>₹{{ tax | number:'1.2-2' }}</div>
+            </div>
+            <div class="summary-row total">
+              <div>Total</div>
+              <div>₹{{ total | number:'1.2-2' }}</div>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="submit-btn" (click)="createOrder()"
+              [disabled]="customerForm.invalid || orderItems.length === 0">
+              Create Order
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create Combo Modal -->
+  <div class="modal" *ngIf="showAddComboModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Create Combination</h2>
+        <button class="close-btn" (click)="closeComboModal()">
+          <i class="material-icons">close</i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <!-- Pendant Selection -->
+        <div class="combo-selection">
+          <h3>Select Pendant</h3>
+          <div class="selection-grid">
+            <div class="selection-card" *ngFor="let pendant of pendants"
+              [class.selected]="selectedPendant?._id === pendant._id" (click)="selectPendant(pendant)">
+              <div class="selection-image">
+                <img [src]="pendant.imageUrl || 'assets/images/placeholder.jpg'" [alt]="pendant.name">
+              </div>
+              <div class="selection-name">{{ pendant.name }}</div>
+              <div class="selection-price">₹{{ pendant.price }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chain Selection -->
+        <div class="combo-selection">
+          <h3>Select Chain</h3>
+          <div class="selection-grid">
+            <div class="selection-card" *ngFor="let chain of chains" [class.selected]="selectedChain?._id === chain._id"
+              (click)="selectChain(chain)">
+              <div class="selection-image">
+                <img [src]="chain.imageUrl || 'assets/images/placeholder.jpg'" [alt]="chain.name">
+              </div>
+              <div class="selection-name">{{ chain.name }}</div>
+              <div class="selection-price">₹{{ chain.price }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="form-actions">
+          <button type="button" class="cancel-btn" (click)="closeComboModal()">Cancel</button>
+          <button type="button" class="submit-btn" [disabled]="!selectedPendant || !selectedChain"
+            (click)="addComboToOrder()">
+            Add Combination
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,96 @@
+<div class="home-container">
+  <!-- Header with navigation -->
+  <header class="main-header">
+    <div class="container">
+      <div class="header-content">
+        <nav class="nav-links">
+          <a routerLink="/chains" class="nav-link">Chains</a>
+          <a routerLink="/pendants" class="nav-link">Pendants</a>
+          <a routerLink="/create-combination" class="nav-link">Create Combination</a>
+        </nav>
+        <div class="right-actions">
+          <a routerLink="/cart" class="cart-icon">
+            <i class="material-icons">shopping_cart</i>
+          </a>
+          <a routerLink="/auth/login" class="login-btn">Login</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="hero-content">
+      <h1>Elegant Jewelry Collections</h1>
+      <p>Discover our premium chains and pendants, crafted with exquisite design and quality materials.</p>
+      <div class="hero-buttons">
+        <a routerLink="/products" class="btn btn-primary">Browse All Products</a>
+        <a routerLink="/create-combination" class="btn btn-secondary">Create Custom Combinations</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Category Section -->
+  <section class="category-section">
+    <div class="container">
+      <h2 class="section-title">Shop By Category</h2>
+
+      <div class="category-grid">
+        <div class="category-card">
+          <img src="assets/images/chains.jpg" alt="Chains" class="category-image">
+          <div class="category-info">
+            <h3>Chains</h3>
+            <p>Premium quality gold and silver chains in various designs and lengths.</p>
+            <a routerLink="/products" [queryParams]="{category: 'chain'}" class="btn-outline">EXPLORE CHAINS</a>
+          </div>
+        </div>
+
+        <div class="category-card">
+          <img src="assets/images/pendants.jpg" alt="Pendants" class="category-image">
+          <div class="category-info">
+            <h3>Pendants</h3>
+            <p>Beautiful pendants that add elegance and personalization to any chain.</p>
+            <a routerLink="/products" [queryParams]="{category: 'pendant'}" class="btn-outline">EXPLORE PENDANTS</a>
+          </div>
+        </div>
+
+        <div class="category-card">
+          <img src="assets/images/combinations.jpg" alt="Combinations" class="category-image">
+          <div class="category-info">
+            <h3>Custom Combinations</h3>
+            <p>Create your own unique jewelry by combining chains and pendants.</p>
+            <a routerLink="/create-combination" class="btn-outline">BUILD YOUR OWN</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Featured Products -->
+  <section class="featured-section">
+    <div class="container">
+      <h2 class="section-title">Featured Products</h2>
+
+      <div *ngIf="(featuredProducts$ | async)?.length === 0" class="no-products">
+        <div class="info-icon">
+          <i class="material-icons">info</i>
+        </div>
+        <p>No featured products available</p>
+      </div>
+
+      <div class="product-grid">
+        <div *ngFor="let product of featuredProducts$ | async" class="product-card">
+          <div class="product-image">
+            <img [src]="product.imageUrl" [alt]="product.name">
+          </div>
+          <div class="product-info">
+            <h3 class="product-title">{{ product.name }}</h3>
+            <p class="product-category">{{ product.category }}</p>
+            <p class="product-price">₹{{ product.price }}</p>
+            <a [routerLink]="['/products', product._id]" class="btn-view">View Details</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>

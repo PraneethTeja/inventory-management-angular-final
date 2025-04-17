@@ -1,0 +1,86 @@
+<div class="dashboard">
+  <div class="dashboard-header">
+    <h2>Dashboard</h2>
+    <p>Welcome to your admin dashboard. Here's an overview of your shop.</p>
+  </div>
+
+  <div class="dashboard-stats">
+    <div class="stat-card">
+      <div class="icon" style="background-color: #2196F3;">
+        <i class="material-icons">shopping_cart</i>
+      </div>
+      <div class="stat-content">
+        <div class="stat-title">Total Orders</div>
+        <div class="stat-value">{{ stats.orders.total }}</div>
+        <div class="stat-description">{{ stats.orders.pending }} pending</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="icon" style="background-color: #4CAF50;">
+        <i class="material-icons">payments</i>
+      </div>
+      <div class="stat-content">
+        <div class="stat-title">Total Revenue</div>
+        <div class="stat-value">₹{{ stats.orders.revenue.toLocaleString() }}</div>
+        <div class="stat-description">From {{ stats.orders.delivered }} delivered orders</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="icon" style="background-color: #E91E63;">
+        <i class="material-icons">inventory_2</i>
+      </div>
+      <div class="stat-content">
+        <div class="stat-title">Products</div>
+        <div class="stat-value">{{ stats.products.total }}</div>
+        <div class="stat-description">{{ stats.products.lowStock }} low in stock</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="icon" style="background-color: #FF9800;">
+        <i class="material-icons">people</i>
+      </div>
+      <div class="stat-content">
+        <div class="stat-title">Customers</div>
+        <div class="stat-value">{{ stats.customers?.total || 0 }}</div>
+        <div class="stat-description">{{ stats.customers?.new || 0 }} new this month</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="recent-orders">
+    <div class="section-header">
+      <h3>Recent Orders</h3>
+      <a routerLink="/admin/orders" class="view-all">View All</a>
+    </div>
+
+    <div class="orders-table-container">
+      <table class="orders-table">
+        <thead>
+          <tr>
+            <th>Order ID</th>
+            <th>Customer</th>
+            <th>Date</th>
+            <th>Amount</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let order of recentOrders">
+            <td>{{ order.id }}</td>
+            <td>{{ order.customer }}</td>
+            <td>{{ order.date | date:'medium' }}</td>
+            <td>₹{{ order.amount.toFixed(2) }}</td>
+            <td>
+              <span class="status-badge" [ngClass]="order.status.toLowerCase()">
+                {{ order.status }}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

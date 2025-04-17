@@ -1,0 +1,279 @@
+/* You can add global styles to this file, and also import other style files */
+@import '@angular/material/prebuilt-themes/indigo-pink.css';
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'DM Sans', sans-serif;
+}
+
+html, body {
+  height: 100%;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  color: #333;
+  background-color: #fff;
+  line-height: 1.6;
+}
+
+/* Custom Variables */
+:root {
+  --primary-color: #3f51b5;
+  --accent-color: #ff4081;
+  --warn-color: #f44336;
+  --text-color: #333;
+  --light-text: #fff;
+  --border-color: #ddd;
+  --background-color: #f8f8f8;
+  --card-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  --border-radius: 12px;
+  --button-radius: 8px;
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  
+  /* Admin theme colors */
+  --admin-primary: #1a237e;
+  --admin-secondary: #3949ab;
+  --admin-accent: #f50057;
+  --admin-background: #f5f5f5;
+  --admin-card-bg: #ffffff;
+  --admin-text: #333333;
+  --admin-sidebar-width: 280px;
+}
+
+/* Common Styles */
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 15px;
+}
+
+.section {
+  margin: var(--spacing-xl) 0;
+}
+
+.card {
+  background: white;
+  border-radius: var(--border-radius);
+  box-shadow: var(--card-shadow);
+  overflow: hidden;
+}
+
+.btn {
+  border-radius: var(--button-radius);
+  padding: var(--spacing-sm) var(--spacing-md);
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.3s, transform 0.2s;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+.btn-primary, .btn-secondary {
+  border-radius: var(--border-radius);
+}
+
+/* Form Styles */
+.form-field {
+  margin-bottom: var(--spacing-md);
+}
+
+input, select, textarea {
+  font-family: 'DM Sans', sans-serif;
+  border-radius: var(--border-radius);
+  padding: 10px 12px;
+}
+
+/* Material Design Overrides */
+.mat-mdc-card {
+  border-radius: var(--border-radius) !important;
+  font-family: 'DM Sans', sans-serif !important;
+}
+
+.mat-mdc-button-base {
+  border-radius: var(--border-radius) !important;
+  font-family: 'DM Sans', sans-serif !important;
+}
+
+.mat-mdc-form-field {
+  font-family: 'DM Sans', sans-serif !important;
+}
+
+.mat-mdc-select {
+  font-family: 'DM Sans', sans-serif !important;
+}
+
+.mat-mdc-option {
+  font-family: 'DM Sans', sans-serif !important;
+}
+
+.mat-mdc-dialog-container {
+  border-radius: var(--border-radius) !important;
+}
+
+.mat-mdc-snack-bar-container {
+  border-radius: var(--border-radius) !important;
+}
+
+.mat-mdc-tab-header {
+  font-family: 'DM Sans', sans-serif !important;
+}
+
+.mat-mdc-menu-panel {
+  border-radius: var(--border-radius) !important;
+}
+
+.mat-mdc-chip {
+  border-radius: 20px !important;
+  font-family: 'DM Sans', sans-serif !important;
+}
+
+/* Utility Classes */
+.text-center {
+  text-align: center;
+}
+
+.d-flex { display: flex; }
+.justify-between { justify-content: space-between; }
+.align-center { align-items: center; }
+.flex-column { flex-direction: column; }
+.w-100 { width: 100%; }
+.h-100 { height: 100%; }
+.mb-1 { margin-bottom: var(--spacing-xs); }
+.mb-2 { margin-bottom: var(--spacing-sm); }
+.mb-3 { margin-bottom: 1.5rem; }
+.mb-4 { margin-bottom: var(--spacing-lg); }
+.mt-1 { margin-top: var(--spacing-xs); }
+.mt-2 { margin-top: var(--spacing-sm); }
+.mt-3 { margin-top: 1.5rem; }
+.mt-4 { margin-top: var(--spacing-lg); }
+
+/* Material Icons */
+.material-icons {
+  font-family: 'Material Icons';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Round corners for all components */
+.category-card,
+.product-card,
+.product-image img,
+.btn, .btn-outline, .btn-view,
+.btn-primary, .btn-secondary,
+.filter-item,
+.category-image,
+.hero-section,
+input, select, textarea,
+.mat-mdc-card,
+.mat-mdc-dialog-container,
+.mat-mdc-menu-panel {
+  border-radius: var(--border-radius);
+}
+
+/* Hover effects */
+.category-card:hover,
+.product-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Admin specific global styles */
+.app-container {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.alert {
+  padding: 15px;
+  margin-bottom: 20px;
+  border-radius: var(--border-radius);
+}
+
+.alert-info {
+  background-color: #e3f2fd;
+  color: #0277bd;
+  border: 1px solid #90caf9;
+}
+
+.alert-success {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  border: 1px solid #a5d6a7;
+}
+
+.alert-warning {
+  background-color: #fff8e1;
+  color: #ff8f00;
+  border: 1px solid #ffe082;
+}
+
+.alert-danger {
+  background-color: #ffebee;
+  color: #c62828;
+  border: 1px solid #ef9a9a;
+}
+
+/* Break points for responsive design */
+@media (max-width: 768px) {
+  /* Mobile styles */
+  .container {
+    padding: 0 20px;
+  }
+  
+  :root {
+    --admin-sidebar-width: 240px;
+  }
+  
+  .admin-layout {
+    flex-direction: column;
+  }
+  
+  .sidebar {
+    width: 100% !important;
+    height: auto;
+  }
+  
+  .content {
+    margin-left: 0 !important;
+  }
+}
+
+@media (max-width: 576px) {
+  /* Small mobile styles */
+  .container {
+    padding: 0 15px;
+  }
+  
+  .stats-cards {
+    grid-template-columns: 1fr !important;
+  }
+}

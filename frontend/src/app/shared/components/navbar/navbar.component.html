@@ -1,4 +1,4 @@
-<header class="main-header" [ngClass]="{'scrolled': isScrolled}">
+<header class="main-header jewelry-navbar" [ngClass]="{'scrolled': isScrolled}">
   <div class="container">
     <div class="logo-container">
       <a routerLink="/" class="logo" (click)="closeMobileMenu()">Chic Chains & Charms</a>
@@ -12,13 +12,13 @@
 
     <div class="nav-container" [class.open]="isMobileMenuOpen">
       <nav>
-        <ul class="nav-links">
+        <ul class="nav-links horizontal-nav">
           <li><a routerLink="/" [class.active]="isRouteActive('/') || activePage === 'home'" class="nav-link"
               (click)="closeMobileMenu()">Home</a></li>
           <li><a routerLink="/products" [class.active]="isRouteActive('/products') || activePage === 'shop'"
               class="nav-link" (click)="closeMobileMenu()">Shop</a></li>
-          <li><a routerLink="/collections" [class.active]="isRouteActive('/collections')" class="nav-link"
-              (click)="closeMobileMenu()">Collections</a></li>
+          <!-- <li><a routerLink="/collections" [class.active]="isRouteActive('/collections')" class="nav-link"
+              (click)="closeMobileMenu()">Collections</a></li> -->
           <li><a routerLink="/about" [class.active]="isRouteActive('/about')" class="nav-link"
               (click)="closeMobileMenu()">About</a></li>
           <li><a routerLink="/contact" [class.active]="isRouteActive('/contact')" class="nav-link"
@@ -46,3 +46,107 @@
     </div>
   </div>
 </header>
+
+<style>
+  .jewelry-navbar .horizontal-nav {
+    display: flex !important;
+    list-style: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .jewelry-navbar .horizontal-nav li {
+    margin: 0 15px !important;
+    display: inline-block !important;
+  }
+
+  .jewelry-navbar .horizontal-nav .nav-link {
+    color: #333333 !important;
+    text-decoration: none !important;
+    font-size: 16px !important;
+    font-weight: 500 !important;
+    position: relative !important;
+    padding: 5px 0 !important;
+    display: inline-block !important;
+  }
+
+  .jewelry-navbar .horizontal-nav .nav-link:hover,
+  .jewelry-navbar .horizontal-nav .nav-link.active {
+    color: #7f2257 !important;
+  }
+
+  .jewelry-navbar .horizontal-nav .nav-link.active::after {
+    content: '' !important;
+    position: absolute !important;
+    bottom: -5px !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 2px !important;
+    background-color: #7f2257 !important;
+  }
+
+  .jewelry-navbar .container {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    height: 100% !important;
+  }
+
+  .jewelry-navbar .nav-container {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    flex: 1 !important;
+    margin-left: 30px !important;
+  }
+
+  .jewelry-navbar .logo {
+    color: #7f2257 !important;
+    text-decoration: none !important;
+    font-weight: bold !important;
+  }
+
+  .jewelry-navbar .right-actions {
+    display: flex !important;
+    align-items: center !important;
+  }
+
+  .jewelry-navbar .login-btn {
+    background-color: #7f2257 !important;
+    color: white !important;
+    padding: 8px 20px !important;
+    border-radius: 4px !important;
+    text-decoration: none !important;
+  }
+
+  .jewelry-navbar .cart-icon {
+    margin-right: 20px !important;
+    cursor: pointer !important;
+    position: relative !important;
+  }
+
+  .jewelry-navbar .cart-count {
+    position: absolute !important;
+    top: -8px !important;
+    right: -8px !important;
+    background-color: #7f2257 !important;
+    color: white !important;
+    border-radius: 50% !important;
+    width: 20px !important;
+    height: 20px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 12px !important;
+  }
+
+  @media (max-width: 992px) {
+    .jewelry-navbar .nav-container.open .horizontal-nav {
+      flex-direction: column !important;
+    }
+
+    .jewelry-navbar .mobile-toggle {
+      display: flex !important;
+    }
+  }
+</style>

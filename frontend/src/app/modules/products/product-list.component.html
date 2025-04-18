@@ -7,60 +7,115 @@
     <div class="products-header">
       <h2 class="page-title">{{pageTitle}}</h2>
       <div class="search-container">
-        <input type="text" [(ngModel)]="searchTerm" (input)="onSearchChange()" placeholder="Search products..."
+        <input type="text" [(ngModel)]="searchQuery" (input)="applyFilters()" placeholder="Search products..."
           class="search-input">
-        <i class="material-icons search-icon">search</i>
+        <i class="fas fa-search search-icon"></i>
       </div>
     </div>
 
-    <!-- Category filters -->
-    <div class="category-filters">
-      <a routerLink="/products" [class.active]="!selectedCategory" class="filter-item">All Products</a>
-      <a routerLink="/products" [queryParams]="{category: 'pendant'}" [class.active]="selectedCategory === 'pendant'"
-        class="filter-item">Pendants</a>
-      <a routerLink="/products" [queryParams]="{category: 'chain'}" [class.active]="selectedCategory === 'chain'"
-        class="filter-item">Chains</a>
+    <!-- Category filters and sorting -->
+    <div class="filter-controls">
+      <div class="category-filters">
+        <a href="javascript:void(0)" [class.active]="activeCategory === 'all'" (click)="filterByCategory('all')"
+          class="filter-item">All Products</a>
+        <a href="javascript:void(0)" [class.active]="activeCategory === 'pendant'" (click)="filterByCategory('pendant')"
+          class="filter-item">Pendants</a>
+        <a href="javascript:void(0)" [class.active]="activeCategory === 'chain'" (click)="filterByCategory('chain')"
+          class="filter-item">Chains</a>
+        <!-- <a href="javascript:void(0)" [class.active]="activeCategory === 'accessory'"
+          (click)="filterByCategory('accessory')" class="filter-item">Accessories</a> -->
+      </div>
+
+      <div class="sort-container">
+        <label for="sort-select">Sort by:</label>
+        <select id="sort-select" [(ngModel)]="sortBy" (change)="sortProducts()" class="sort-select">
+          <option value="default">Default</option>
+          <option value="priceLowHigh">Price: Low to High</option>
+          <option value="priceHighLow">Price: High to Low</option>
+          <option value="nameAZ">Name: A to Z</option>
+          <option value="nameZA">Name: Z to A</option>
+        </select>
+      </div>
     </div>
 
     <!-- Loading state -->
-    <div *ngIf="loading" class="loading">
+    <div *ngIf="isLoading" class="loading">
       <div class="loader"></div>
       <p>Loading products...</p>
     </div>
 
     <!-- Empty state -->
-    <div *ngIf="!loading && (filteredProducts$ | async)?.length === 0" class="no-products">
+    <div *ngIf="!isLoading && filteredProducts.length === 0" class="no-products">
       <div class="info-icon">
-        <i class="material-icons">search_off</i>
+        <i class="fas fa-info-circle"></i>
       </div>
-      <p>No products found matching your criteria.</p>
-      <button class="reset-filters-btn" (click)="resetFilters()">Reset filters</button>
+      <h3>No products found</h3>
+      <p>We couldn't find any products that match your criteria.</p>
+      <button class="reset-filters-btn" (click)="resetFilters()">Reset Filters</button>
     </div>
 
     <!-- Products grid -->
     <div class="product-grid">
-      <div *ngFor="let product of filteredProducts$ | async" class="product-card">
-        <div class="product-image" [routerLink]="['/products', product._id]">
-          <img [src]="product.imageUrl || 'assets/images/product-placeholder.jpg'" [alt]="product.name">
-          <span class="discount-badge" *ngIf="product.discount">-{{product.discount.percentage}}%</span>
-          <span class="stock-badge out-of-stock" *ngIf="!product.inStock">Out of Stock</span>
-          <span class="stock-badge low-stock" *ngIf="product.inStock && product.stockQuantity <= 5">Low Stock</span>
+      <div *ngFor="let product of filteredProducts" class="product-card">
+        <div class="product-image" (click)="viewProductDetails(product)">
+          <img [src]="product.imageUrl || 'assets/images/placeholder.jpg'" [alt]="product.name">
+          <span class="discount-badge" *ngIf="(product.discountPercentage ?? 0) > 0">
+            {{product.discountPercentage}}% OFF
+          </span>
+          <span class="stock-badge out-of-stock" *ngIf="!product.inStock || getProductStock(product) === 0">Out of
+            Stock</span>
+          <span class="stock-badge low-stock"
+            *ngIf="product.inStock && getProductStock(product) > 0 && getProductStock(product) < 5">Low
+            Stock</span>
         </div>
         <div class="product-info">
-          <h3 class="product-title" [routerLink]="['/products', product._id]">{{ product.name }}</h3>
-          <p class="product-category">{{ product.category | titlecase }}</p>
+          <h3 class="product-title" (click)="viewProductDetails(product)">{{ product.name }}</h3>
+          <div class="product-meta">
+            <p class="product-category">{{ product.category }}</p>
+            <p class="product-code">Code: {{ product.productCode }}</p>
+          </div>
           <div class="price-container">
-            <p class="product-price" *ngIf="!product.discount">₹{{ product.price }}</p>
-            <div class="discount-price" *ngIf="product.discount">
-              <p class="original-price">₹{{ product.price }}</p>
-              <p class="sale-price">₹{{ calculateDiscountedPrice(product) }}</p>
+            <div class="discount-price" *ngIf="(product.discountPercentage ?? 0) > 0">
+              <p class="sale-price">{{ product.discountedPrice | currency:'INR' }}</p>
+              <p class="original-price">{{ product.price | currency:'INR' }}</p>
             </div>
+            <p class="product-price" *ngIf="(product.discountPercentage ?? 0) === 0">
+              {{ product.price | currency:'INR' }}
+            </p>
           </div>
           <div class="product-actions">
-            <a [routerLink]="['/products', product._id]" class="btn-view">View Details</a>
-            <button (click)="addToCart(product)" class="btn-primary" [disabled]="!product.inStock">
-              <i class="material-icons">shopping_cart</i>
-              {{ product.inStock ? 'Add to Cart' : 'Out of Stock' }}
+            <button class="btn-view" (click)="viewProductDetails(product)">
+              <i class="fas fa-eye"></i>
+              View Details
+            </button>
+
+            <!-- Cart button states -->
+            <ng-container *ngIf="product.inStock && getProductStock(product) > 0">
+              <ng-container *ngIf="!isInCart(product); else quantityControls">
+                <button (click)="addToCart(product)" class="btn-primary"
+                  [disabled]="!product.inStock || getProductStock(product) === 0">
+                  <i class="fas fa-shopping-cart"></i>
+                  Add to Cart
+                </button>
+              </ng-container>
+
+              <ng-template #quantityControls>
+                <div class="quantity-controls">
+                  <button (click)="decreaseQuantity(product)" class="qty-btn qty-minus">
+                    <i class="fas fa-minus"></i>
+                  </button>
+                  <span class="qty-value">{{ getCartItemQuantity(product) }}</span>
+                  <button (click)="increaseQuantity(product)" class="qty-btn qty-plus"
+                    [disabled]="getProductStock(product) === getCartItemQuantity(product)">
+                    <i class="fas fa-plus"></i>
+                  </button>
+                </div>
+              </ng-template>
+            </ng-container>
+
+            <button *ngIf="!product.inStock || getProductStock(product) === 0" class="btn-primary disabled" disabled>
+              <i class="fas fa-shopping-cart"></i>
+              Out of Stock
             </button>
           </div>
         </div>
@@ -69,11 +124,107 @@
 
     <!-- Load more button -->
     <div class="load-more-container"
-      *ngIf="!loading && (filteredProducts$ | async)?.length && (filteredProducts$ | async)!.length > 0 && hasMoreProducts">
-      <button class="load-more-btn" (click)="loadMoreProducts()" [disabled]="loadingMore">
-        <span *ngIf="!loadingMore">Load More Products</span>
-        <span *ngIf="loadingMore">Loading...</span>
+      *ngIf="!isLoading && filteredProducts && filteredProducts.length > 0 && hasMoreProducts">
+      <button class="load-more-btn" (click)="loadMore()" [disabled]="isLoadingMore">
+        <span *ngIf="!isLoadingMore">Load More Products</span>
+        <span *ngIf="isLoadingMore">Loading...</span>
       </button>
+    </div>
+  </div>
+
+  <!-- Product details modal -->
+  <div class="product-modal-overlay" *ngIf="selectedProduct" (click)="closeProductModal($event)">
+    <div class="product-modal" (click)="$event.stopPropagation()">
+      <button class="close-modal" (click)="closeProductModal($event)">
+        <i class="fas fa-times"></i>
+      </button>
+
+      <div class="modal-content" *ngIf="selectedProduct">
+        <div class="modal-product-image">
+          <img [src]="selectedProduct.imageUrl || 'assets/images/placeholder.jpg'" [alt]="selectedProduct.name">
+        </div>
+
+        <div class="modal-product-info">
+          <h2 class="modal-product-title">{{ selectedProduct.name }}</h2>
+
+          <div class="modal-product-meta">
+            <p class="product-category">Category: {{ selectedProduct.category }}</p>
+            <p class="product-code">Product Code: {{ selectedProduct.productCode }}</p>
+          </div>
+
+          <div class="modal-price-container">
+            <div class="discount-price" *ngIf="(selectedProduct?.discountPercentage ?? 0) > 0">
+              <p class="sale-price">{{ selectedProduct!.discountedPrice | currency:'INR' }}</p>
+              <p class="original-price">{{ selectedProduct!.price | currency:'INR' }}</p>
+              <p class="discount-text">Save {{ selectedProduct!.discountPercentage }}% off retail</p>
+            </div>
+            <p class="product-price" *ngIf="(selectedProduct?.discountPercentage ?? 0) === 0">
+              {{ selectedProduct!.price | currency:'INR' }}
+            </p>
+          </div>
+
+          <div class="product-description">
+            <h3>Description</h3>
+            <p>{{ selectedProduct.description }}</p>
+          </div>
+
+          <div class="product-details" *ngIf="selectedProduct.details && selectedProduct.details.length > 0">
+            <h3>Product Details</h3>
+            <ul>
+              <li *ngFor="let detail of selectedProduct.details">{{ detail }}</li>
+            </ul>
+          </div>
+
+          <div class="stock-info">
+            <p *ngIf="selectedProduct && selectedProduct.inStock && getProductStock(selectedProduct) > 0 && getProductStock(selectedProduct) < 5"
+              class="low-stock">
+              <i class="fas fa-exclamation-circle"></i> Only {{ getProductStock(selectedProduct) }} left in stock
+            </p>
+            <p *ngIf="selectedProduct && (!selectedProduct.inStock || getProductStock(selectedProduct) === 0)"
+              class="out-of-stock">
+              <i class="fas fa-times-circle"></i> Out of Stock
+            </p>
+            <p *ngIf="selectedProduct && selectedProduct.inStock && getProductStock(selectedProduct) >= 5">
+              <i class="fas fa-check-circle"></i> In Stock
+            </p>
+          </div>
+
+          <div class="modal-product-actions">
+            <ng-container *ngIf="selectedProduct && selectedProduct.inStock && getProductStock(selectedProduct) > 0">
+              <ng-container *ngIf="!isInCart(selectedProduct!); else modalQuantityControls">
+                <button (click)="addToCart(selectedProduct!)" class="btn-primary btn-modal-cart"
+                  [disabled]="!selectedProduct?.inStock || getProductStock(selectedProduct) === 0">
+                  <i class="fas fa-shopping-cart"></i>
+                  Add to Cart
+                </button>
+              </ng-container>
+
+              <ng-template #modalQuantityControls>
+                <div class="quantity-controls modal-quantity">
+                  <button (click)="decreaseQuantity(selectedProduct)" class="qty-btn qty-minus">
+                    <i class="fas fa-minus"></i>
+                  </button>
+                  <span class="qty-value">{{ getCartItemQuantity(selectedProduct) }}</span>
+                  <button (click)="increaseQuantity(selectedProduct)" class="qty-btn qty-plus"
+                    [disabled]="getProductStock(selectedProduct) === getCartItemQuantity(selectedProduct)">
+                    <i class="fas fa-plus"></i>
+                  </button>
+                </div>
+              </ng-template>
+            </ng-container>
+
+            <button *ngIf="!selectedProduct || !selectedProduct.inStock || getProductStock(selectedProduct) === 0"
+              class="btn-primary disabled btn-modal-cart" disabled>
+              <i class="fas fa-shopping-cart"></i>
+              Out of Stock
+            </button>
+          </div>
+
+          <div class="product-tags" *ngIf="selectedProduct.tags && selectedProduct.tags.length > 0">
+            <span class="tag" *ngFor="let tag of selectedProduct.tags">{{ tag }}</span>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>

@@ -19,7 +19,7 @@ interface CartItem {
   styleUrls: ['./navbar.component.scss']
 })
 export class NavbarComponent implements OnInit {
-  @Input() activePage: string = '';
+  @Input() activePage: string = 'home';
   @Input() cartItemCount: number = 0;
 
   isMobileMenuOpen = false;

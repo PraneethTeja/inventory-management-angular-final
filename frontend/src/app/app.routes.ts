@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard, adminGuard } from './core/guards/auth.guard';
 import { Component } from '@angular/core';
+import { CartComponent } from './modules/cart/cart.component';
 
 // Simple test component to see if routing works
 @Component({
@@ -36,6 +37,6 @@ export const routes: Routes = [
     canActivate: [authGuard, adminGuard]
   },
   { path: 'products', loadChildren: () => import('./modules/products/products.module').then(m => m.ProductsModule) },
-  { path: 'cart', loadChildren: () => import('./modules/cart/cart.module').then(m => m.CartModule) },
+  { path: 'cart', component: CartComponent },
   { path: '**', redirectTo: '', pathMatch: 'full' }
 ];

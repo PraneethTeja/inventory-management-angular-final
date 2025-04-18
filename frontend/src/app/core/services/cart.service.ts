@@ -1,129 +1,160 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, catchError, map, throwError } from 'rxjs';
+import { BehaviorSubject, Observable, catchError, throwError } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
 
 import { environment } from '../../../environments/environment';
 import { Cart, CartItem, WhatsAppRedirect } from '../models/cart.model';
 import { Product } from '../models/product.model';
 
+// No duplicate interface needed
+
 @Injectable({
   providedIn: 'root'
 })
 export class CartService {
   private apiUrl = `${environment.apiUrl}/whatsapp`;
-  private cartSubject = new BehaviorSubject<Cart>({
-    items: [],
-    subtotal: 0,
-    tax: 0,
-    totalAmount: 0
-  });
-
-  cart$ = this.cartSubject.asObservable();
+  private cartItems: CartItem[] = [];
+  private cartItemsSubject = new BehaviorSubject<CartItem[]>([]);
+  private cartCountSubject = new BehaviorSubject<number>(0);
 
   constructor(private http: HttpClient) {
-    this.loadCartFromStorage();
+    console.log('CartService initialized');
+    // Try to load cart from localStorage on init
+    this.loadCart();
   }
 
-  getCart(): Cart {
-    return this.cartSubject.value;
+  // Get cart items as observable
+  getCartItems(): Observable<CartItem[]> {
+    return this.cartItemsSubject.asObservable();
   }
 
-  addToCart(product: Product, quantity: number = 1, isCombo: boolean = false, pendantProduct?: Product, chainProduct?: Product): void {
-    const cart = this.getCart();
-    let cartId: string;
+  // Get cart count as observable
+  getCartCount(): Observable<number> {
+    return this.cartCountSubject.asObservable();
+  }
 
-    // For combination products
-    if (isCombo && pendantProduct && chainProduct) {
-      cartId = uuidv4();
-      const newItem: CartItem = {
-        id: cartId,
-        product,
-        quantity,
-        isCombo,
-        pendantProduct,
-        chainProduct
-      };
-      cart.items.push(newItem);
+  // Get current cart count
+  getCurrentCartCount(): number {
+    return this.cartItems.reduce((total, item) => total + item.quantity, 0);
+  }
+
+  // Add item to cart
+  addItem(item: CartItem): void {
+    const existingItem = this.cartItems.find(cartItem => cartItem.id === item.id);
+
+    if (existingItem) {
+      existingItem.quantity += item.quantity || 1;
     } else {
-      // Check if product is already in cart
-      const existingItemIndex = cart.items.findIndex(
-        item => item.product._id === product._id && !item.isCombo
-      );
+      // Ensure quantity is at least 1
+      const newItem = { ...item, quantity: item.quantity || 1 };
+      this.cartItems.push(newItem);
+    }
 
-      if (existingItemIndex >= 0) {
-        // Increase quantity of existing item
-        cart.items[existingItemIndex].quantity += quantity;
+    this.updateCart();
+  }
+
+  // Static utility to log cart operations for debugging
+  private logOperation(operation: string, item?: any): void {
+    console.log(`Cart operation: ${operation}`, item || '');
+  }
+
+  // Check if item is in cart
+  isInCart(productId: string): boolean {
+    const found = this.cartItems.some(item => item.product?._id === productId);
+    this.logOperation(`isInCart(${productId}): ${found}`);
+    return found;
+  }
+
+  // Get quantity of an item in cart
+  getQuantity(productId: string): number {
+    const cartItem = this.cartItems.find(item => item.product?._id === productId);
+    const quantity = cartItem ? cartItem.quantity : 0;
+    this.logOperation(`getQuantity(${productId}): ${quantity}`);
+    return quantity;
+  }
+
+  // Add to cart with quantity 1
+  addToCart(product: Product): void {
+    this.logOperation('addToCart', product);
+
+    const cartItem: CartItem = {
+      id: uuidv4(),
+      product,
+      quantity: 1,
+      isCombo: false
+    };
+    this.addItem(cartItem);
+  }
+
+  // Remove an item from cart
+  removeItem(productId: string): void {
+    this.cartItems = this.cartItems.filter(item => item.product?._id !== productId);
+    this.updateCart();
+  }
+
+  // Decrease quantity of an item in cart
+  decreaseQuantity(productId: string): void {
+    const cartItem = this.cartItems.find(item => item.product?._id === productId);
+
+    if (cartItem) {
+      if (cartItem.quantity > 1) {
+        cartItem.quantity--;
       } else {
-        // Add new item
-        cartId = uuidv4();
-        const newItem: CartItem = {
-          id: cartId,
-          product,
-          quantity,
-          isCombo: false
-        };
-        cart.items.push(newItem);
+        this.removeItem(productId);
+        return;
+      }
+
+      this.updateCart();
+    }
+  }
+
+  // Clear the cart
+  clearCart(): void {
+    this.cartItems = [];
+    this.updateCart();
+  }
+
+  // Send order to WhatsApp
+  sendToWhatsApp(phoneNumber: string): Observable<any> {
+    const cartContent = this.cartItems.map(item =>
+      `${item.product?.name} x ${item.quantity} - ₹${(item.product?.price * item.quantity).toFixed(2)}`
+    ).join('\n');
+
+    const totalAmount = this.cartItems.reduce((total, item) =>
+      total + ((item.product?.price || 0) * item.quantity), 0
+    );
+
+    const message = `New Order:\n${cartContent}\n\nTotal: ₹${totalAmount.toFixed(2)}`;
+
+    return this.http.post<any>(`${this.apiUrl}/send`, {
+      phoneNumber,
+      message
+    });
+  }
+
+  // Private method to update cart in localStorage and notify subscribers
+  private updateCart(): void {
+    this.logOperation('updateCart', { count: this.getCurrentCartCount(), items: this.cartItems.length });
+    localStorage.setItem('cart', JSON.stringify(this.cartItems));
+    this.cartItemsSubject.next([...this.cartItems]);
+    this.cartCountSubject.next(this.getCurrentCartCount());
+  }
+
+  // Private method to load cart from localStorage
+  private loadCart(): void {
+    const savedCart = localStorage.getItem('cart');
+    if (savedCart) {
+      try {
+        this.cartItems = JSON.parse(savedCart);
+        this.cartItemsSubject.next([...this.cartItems]);
+        this.cartCountSubject.next(this.getCurrentCartCount());
+      } catch (e) {
+        console.error('Error loading cart from localStorage', e);
+        this.cartItems = [];
+        this.updateCart();
       }
     }
-
-    this.updateCartTotals(cart);
-    this.cartSubject.next(cart);
-    this.saveCartToStorage();
-  }
-
-  updateItemQuantity(itemId: string, quantity: number): void {
-    if (quantity <= 0) {
-      this.removeFromCart(itemId);
-      return;
-    }
-
-    const cart = this.getCart();
-    const itemIndex = cart.items.findIndex(item => item.id === itemId);
-
-    if (itemIndex >= 0) {
-      cart.items[itemIndex].quantity = quantity;
-      this.updateCartTotals(cart);
-      this.cartSubject.next(cart);
-      this.saveCartToStorage();
-    }
-  }
-
-  removeFromCart(itemId: string): void {
-    const cart = this.getCart();
-    cart.items = cart.items.filter(item => item.id !== itemId);
-    this.updateCartTotals(cart);
-    this.cartSubject.next(cart);
-    this.saveCartToStorage();
-  }
-
-  clearCart(): void {
-    const emptyCart: Cart = {
-      items: [],
-      subtotal: 0,
-      tax: 0,
-      totalAmount: 0
-    };
-    this.cartSubject.next(emptyCart);
-    localStorage.removeItem('cart');
-  }
-
-  updateCartCheckout(checkoutDetails: {
-    name: string;
-    email: string;
-    phone: string;
-    address?: {
-      street: string;
-      city: string;
-      state: string;
-      zipCode: string;
-      country: string;
-    }
-  }): void {
-    const cart = this.getCart();
-    cart.checkout = checkoutDetails;
-    this.cartSubject.next(cart);
-    this.saveCartToStorage();
   }
 
   getWhatsAppRedirectUrl(orderId: string): Observable<WhatsAppRedirect> {
@@ -145,42 +176,5 @@ export class CartService {
         return throwError(() => new Error(error.error?.message || 'Failed to send WhatsApp message'));
       })
     );
-  }
-
-  private updateCartTotals(cart: Cart): void {
-    // Calculate subtotal
-    cart.subtotal = cart.items.reduce((total, item) => {
-      if (item.isCombo) {
-        // For combination items, sum the prices of pendant and chain
-        const pendantPrice = item.pendantProduct ? item.pendantProduct.price : 0;
-        const chainPrice = item.chainProduct ? item.chainProduct.price : 0;
-        return total + ((pendantPrice + chainPrice) * item.quantity);
-      } else {
-        return total + (item.product.price * item.quantity);
-      }
-    }, 0);
-
-    // Calculate tax (18% GST for India)
-    cart.tax = cart.subtotal * 0.18;
-
-    // Calculate total amount
-    cart.totalAmount = cart.subtotal + cart.tax;
-  }
-
-  private saveCartToStorage(): void {
-    localStorage.setItem('cart', JSON.stringify(this.cartSubject.value));
-  }
-
-  private loadCartFromStorage(): void {
-    try {
-      const cartJson = localStorage.getItem('cart');
-      if (cartJson) {
-        const cart: Cart = JSON.parse(cartJson);
-        this.cartSubject.next(cart);
-      }
-    } catch (error) {
-      console.error('Error loading cart from storage:', error);
-      localStorage.removeItem('cart');
-    }
   }
 } 

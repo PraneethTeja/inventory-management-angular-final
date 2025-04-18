@@ -1,0 +1,48 @@
+<header class="main-header" [ngClass]="{'scrolled': isScrolled}">
+  <div class="container">
+    <div class="logo-container">
+      <a routerLink="/" class="logo" (click)="closeMobileMenu()">Chic Chains & Charms</a>
+    </div>
+
+    <button class="mobile-toggle" (click)="toggleMobileMenu()" [class.active]="isMobileMenuOpen">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+
+    <div class="nav-container" [class.open]="isMobileMenuOpen">
+      <nav>
+        <ul class="nav-links">
+          <li><a routerLink="/" [class.active]="isRouteActive('/') || activePage === 'home'" class="nav-link"
+              (click)="closeMobileMenu()">Home</a></li>
+          <li><a routerLink="/products" [class.active]="isRouteActive('/products') || activePage === 'shop'"
+              class="nav-link" (click)="closeMobileMenu()">Shop</a></li>
+          <li><a routerLink="/collections" [class.active]="isRouteActive('/collections')" class="nav-link"
+              (click)="closeMobileMenu()">Collections</a></li>
+          <li><a routerLink="/about" [class.active]="isRouteActive('/about')" class="nav-link"
+              (click)="closeMobileMenu()">About</a></li>
+          <li><a routerLink="/contact" [class.active]="isRouteActive('/contact')" class="nav-link"
+              (click)="closeMobileMenu()">Contact</a></li>
+        </ul>
+      </nav>
+
+      <div class="right-actions">
+        <a (click)="navigateToCart()" class="cart-icon">
+          <i class="material-icons">shopping_cart</i>
+          <span class="cart-count" *ngIf="cartCount > 0">{{cartCount}}</span>
+        </a>
+
+        <ng-container *ngIf="isLoggedIn; else loginButton">
+          <div class="user-menu">
+            <a routerLink="/auth/account" class="account-link" (click)="closeMobileMenu()">My Account</a>
+            <button class="logout-btn" (click)="logout()">Logout</button>
+          </div>
+        </ng-container>
+
+        <ng-template #loginButton>
+          <a routerLink="/auth/login" class="login-btn" (click)="closeMobileMenu()">Login</a>
+        </ng-template>
+      </div>
+    </div>
+  </div>
+</header>

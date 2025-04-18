@@ -45,7 +45,7 @@ interface Product {
 export class ProductsComponent implements OnInit {
   products: Product[] = [];
   filteredProducts: Product[] = [];
-  categories: string[] = ['All', 'chain', 'pendant', 'combination'];
+  categories: string[] = ['All', 'chain', 'pendant'];
   selectedCategory: string = 'All';
 
   isLoading: boolean = true;

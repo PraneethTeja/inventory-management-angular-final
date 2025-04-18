@@ -1,0 +1,382 @@
+<div class="manage-orders-page">
+  <div class="page-header">
+    <h2>Manage Orders</h2>
+    <p>View and manage all customer orders in one place.</p>
+  </div>
+
+  <!-- Error message -->
+  <div class="error-message" *ngIf="error">{{ error }}</div>
+
+  <!-- Success message -->
+  <div class="success-message" *ngIf="success">{{ success }}</div>
+
+  <!-- Loading indicator -->
+  <div class="loading" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>Loading orders...</p>
+  </div>
+
+  <div class="filters-section" *ngIf="!isLoading">
+    <div class="search-box">
+      <input type="text" placeholder="Search by order ID, customer name, email, or phone" [(ngModel)]="searchTerm"
+        (input)="applyFilters()">
+      <i class="material-icons">search</i>
+    </div>
+
+    <div class="filter-controls">
+      <div class="filter-group">
+        <label>Status:</label>
+        <select [(ngModel)]="statusFilter" (change)="applyFilters()">
+          <option value="all">All Statuses</option>
+          <option value="pending">Pending</option>
+          <option value="confirmed">Confirmed</option>
+          <option value="processing">Processing</option>
+          <option value="shipped">Shipped</option>
+          <option value="delivered">Delivered</option>
+          <option value="canceled">Canceled</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Date:</label>
+        <select [(ngModel)]="dateFilter" (change)="applyFilters()">
+          <option value="all">All Time</option>
+          <option value="today">Today</option>
+          <option value="week">Last 7 Days</option>
+          <option value="month">Last 30 Days</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="orders-table-container" *ngIf="!isLoading && filteredOrders.length > 0">
+    <table class="orders-table">
+      <thead>
+        <tr>
+          <th (click)="changeSorting('id')">
+            Order ID
+            <i class="material-icons" *ngIf="sortBy === 'id'">
+              {{ sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward' }}
+            </i>
+          </th>
+          <th>Customer</th>
+          <th (click)="changeSorting('date')">
+            Date
+            <i class="material-icons" *ngIf="sortBy === 'date'">
+              {{ sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward' }}
+            </i>
+          </th>
+          <th (click)="changeSorting('totalAmount')">
+            Amount
+            <i class="material-icons" *ngIf="sortBy === 'totalAmount'">
+              {{ sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward' }}
+            </i>
+          </th>
+          <th>Status</th>
+          <th>Payment</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let order of paginatedOrders">
+          <td>{{ order.id }}</td>
+          <td>
+            <div class="customer-info">
+              <div class="customer-name">{{ order.customer.name }}</div>
+              <div class="customer-email">{{ order.customer.email }}</div>
+              <div class="customer-phone">{{ order.customer.phone }}</div>
+            </div>
+          </td>
+          <td>{{ order.date | date:'medium' }}</td>
+          <td>₹{{ order.totalAmount.toFixed(2) }}</td>
+          <td>
+            <span class="status-badge" [ngClass]="getStatusClass(order.status)">
+              {{ order.status }}
+            </span>
+          </td>
+          <td>
+            <div class="payment-info">
+              <div>{{ order.paymentMethod | titlecase }}</div>
+              <span class="payment-badge" [ngClass]="getPaymentStatusClass(order.paymentStatus)">
+                {{ order.paymentStatus }}
+              </span>
+            </div>
+          </td>
+          <td>
+            <div class="action-buttons">
+              <button class="view-btn" (click)="viewOrder(order)" title="View Order Details">
+                <i class="material-icons">visibility</i>
+              </button>
+              <button class="whatsapp-btn" (click)="sendToWhatsApp(order)" title="Send to WhatsApp">
+                <i class="material-icons">whatsapp</i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="empty-state" *ngIf="!isLoading && filteredOrders.length === 0">
+    <i class="material-icons">inbox</i>
+    <h3>No Orders Found</h3>
+    <p>We couldn't find any orders matching your filters. Try adjusting your search criteria.</p>
+    <button (click)="statusFilter = 'all'; dateFilter = 'all'; searchTerm = ''; applyFilters();">Reset Filters</button>
+  </div>
+
+  <div class="pagination" *ngIf="!isLoading && totalPages > 1">
+    <button [disabled]="currentPage === 1" (click)="changePage(currentPage - 1)">
+      <i class="material-icons">chevron_left</i>
+    </button>
+
+    <div class="page-numbers">
+      <button *ngFor="let page of getPageNumbers()" [class.active]="page === currentPage" (click)="changePage(page)">
+        {{ page }}
+      </button>
+    </div>
+
+    <button [disabled]="currentPage === totalPages" (click)="changePage(currentPage + 1)">
+      <i class="material-icons">chevron_right</i>
+    </button>
+  </div>
+
+  <!-- View Order Modal -->
+  <div class="modal-overlay" *ngIf="showViewModal" (click)="closeViewModal()">
+    <div class="modal-content view-order-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Order Details: {{ selectedOrder?.id }}</h3>
+        <button class="close-btn" (click)="closeViewModal()">
+          <i class="material-icons">close</i>
+        </button>
+      </div>
+
+      <div class="modal-body" *ngIf="selectedOrder">
+        <div class="order-section">
+          <h4>Customer Information</h4>
+          <div class="customer-details">
+            <div class="detail-item">
+              <span class="label">Name:</span>
+              <span class="value">{{ selectedOrder.customer.name }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="label">Email:</span>
+              <span class="value">{{ selectedOrder.customer.email }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="label">Phone:</span>
+              <span class="value">{{ selectedOrder.customer.phone }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="order-section">
+          <h4>Order Status</h4>
+          <div class="status-details">
+            <div class="detail-item">
+              <span class="label">Order Status:</span>
+              <span class="value">
+                <span class="status-badge" [ngClass]="getStatusClass(selectedOrder.status)">
+                  {{ selectedOrder.status }}
+                </span>
+              </span>
+            </div>
+            <div class="detail-item">
+              <span class="label">Order Date:</span>
+              <span class="value">{{ selectedOrder.date | date:'medium' }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="label">Payment Method:</span>
+              <span class="value">{{ selectedOrder.paymentMethod | titlecase }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="label">Payment Status:</span>
+              <span class="value">
+                <span class="payment-badge" [ngClass]="getPaymentStatusClass(selectedOrder.paymentStatus)">
+                  {{ selectedOrder.paymentStatus }}
+                </span>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="order-section">
+          <h4>Order Items</h4>
+          <div class="order-items">
+            <table class="items-table">
+              <thead>
+                <tr>
+                  <th>Product</th>
+                  <th>Price</th>
+                  <th>Quantity</th>
+                  <th>Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let item of selectedOrder.items">
+                  <td>
+                    <div class="product-details">
+                      <div class="product-name">{{ item.name }}</div>
+                      <div class="product-category">{{ item.category | titlecase }}</div>
+                    </div>
+                  </td>
+                  <td>₹{{ item.price.toFixed(2) }}</td>
+                  <td>{{ item.quantity }}</td>
+                  <td>₹{{ (item.price * item.quantity).toFixed(2) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="order-section">
+          <h4>Order Summary</h4>
+          <div class="order-summary">
+            <div class="summary-row">
+              <div>Subtotal</div>
+              <div>₹{{ selectedOrder.subtotal.toFixed(2) }}</div>
+            </div>
+            <div class="summary-row">
+              <div>Tax (18% GST)</div>
+              <div>₹{{ selectedOrder.tax.toFixed(2) }}</div>
+            </div>
+            <div class="summary-row total">
+              <div>Total</div>
+              <div>₹{{ selectedOrder.totalAmount.toFixed(2) }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="secondary-btn" (click)="closeViewModal()">Close</button>
+        <button class="primary-btn" (click)="editOrder(selectedOrder); closeViewModal()">Edit Order</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Order Modal -->
+  <div class="modal-overlay" *ngIf="showEditModal" (click)="closeEditModal()">
+    <div class="modal-content edit-order-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Edit Order: {{ editedOrder?.id }}</h3>
+        <button class="close-btn" (click)="closeEditModal()">
+          <i class="material-icons">close</i>
+        </button>
+      </div>
+
+      <div class="modal-body" *ngIf="editedOrder">
+        <div class="order-section">
+          <h4>Customer Information</h4>
+          <div class="edit-form-row">
+            <div class="form-group">
+              <label>Name</label>
+              <input type="text" [(ngModel)]="editedOrder.customer.name" placeholder="Customer name">
+            </div>
+          </div>
+          <div class="edit-form-row">
+            <div class="form-group">
+              <label>Email</label>
+              <input type="email" [(ngModel)]="editedOrder.customer.email" placeholder="Customer email">
+            </div>
+          </div>
+          <div class="edit-form-row">
+            <div class="form-group">
+              <label>Phone</label>
+              <input type="tel" [(ngModel)]="editedOrder.customer.phone" placeholder="Customer phone">
+            </div>
+          </div>
+        </div>
+
+        <div class="order-section">
+          <h4>Order Status</h4>
+          <div class="edit-form-row">
+            <div class="form-group">
+              <label>Order Status</label>
+              <select [(ngModel)]="editedOrder.status">
+                <option *ngFor="let status of statusOptions" [value]="status">
+                  {{ status | titlecase }}
+                </option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Payment Method</label>
+              <select [(ngModel)]="editedOrder.paymentMethod">
+                <option *ngFor="let method of paymentMethodOptions" [value]="method">
+                  {{ method | titlecase }}
+                </option>
+              </select>
+            </div>
+          </div>
+          <div class="edit-form-row">
+            <div class="form-group">
+              <label>Payment Status</label>
+              <select [(ngModel)]="editedOrder.paymentStatus">
+                <option *ngFor="let status of paymentStatusOptions" [value]="status">
+                  {{ status | titlecase }}
+                </option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="order-section">
+          <h4>Order Items</h4>
+          <div class="order-items">
+            <table class="items-table">
+              <thead>
+                <tr>
+                  <th>Product</th>
+                  <th>Price</th>
+                  <th>Quantity</th>
+                  <th>Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let item of editedOrder.items; let i = index">
+                  <td>
+                    <div class="product-details">
+                      <div class="product-name">
+                        <input type="text" [(ngModel)]="item.name" placeholder="Product name">
+                      </div>
+                      <div class="product-category">{{ item.category | titlecase }}</div>
+                    </div>
+                  </td>
+                  <td>
+                    <input type="number" [(ngModel)]="item.price" min="0" step="0.01" style="width: 100px;">
+                  </td>
+                  <td>
+                    <input type="number" [(ngModel)]="item.quantity" min="1" style="width: 60px;">
+                  </td>
+                  <td>₹{{ (item.price * item.quantity).toFixed(2) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="order-section">
+          <h4>Order Summary</h4>
+          <div class="order-summary">
+            <div class="summary-row">
+              <div>Subtotal</div>
+              <div>₹{{ calculateTotal(editedOrder).toFixed(2) }}</div>
+            </div>
+            <div class="summary-row">
+              <div>Tax (18% GST)</div>
+              <div>₹{{ (calculateTotal(editedOrder) * 0.18).toFixed(2) }}</div>
+            </div>
+            <div class="summary-row total">
+              <div>Total</div>
+              <div>₹{{ (calculateTotal(editedOrder) * 1.18).toFixed(2) }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="secondary-btn" (click)="closeEditModal()">Cancel</button>
+        <button class="primary-btn" (click)="saveOrderChanges()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+</div>

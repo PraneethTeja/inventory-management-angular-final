@@ -31,7 +31,10 @@ export class CreateOrderComponent implements OnInit {
   // Selected products for combination
   selectedPendants: Product[] = [];
   selectedChain: Product | null = null;
-  selectedPendant: Product | null = null;
+  filteredChains: Product[] = [];
+  filteredPendants: Product[] = [];
+  chainSearchTerm = '';
+  pendantSearchTerm = '';
 
   // Form groups
   customerForm: FormGroup;
@@ -72,6 +75,8 @@ export class CreateOrderComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadProducts();
+    this.filteredPendants = this.pendants;
+    this.filteredChains = this.chains;
   }
 
   loadProducts(): void {
@@ -1189,5 +1194,21 @@ export class CreateOrderComponent implements OnInit {
 
   navigateToOrders(): void {
     this.router.navigate(['/admin/orders']);
+  }
+
+  filterPendants(): void {
+    const searchTerm = this.pendantSearchTerm.toLowerCase();
+    this.filteredPendants = this.pendants.filter(pendant =>
+      pendant.name.toLowerCase().includes(searchTerm) ||
+      pendant.productCode.toLowerCase().includes(searchTerm)
+    );
+  }
+
+  filterChains(): void {
+    const searchTerm = this.chainSearchTerm.toLowerCase();
+    this.filteredChains = this.chains.filter(chain =>
+      chain.name.toLowerCase().includes(searchTerm) ||
+      chain.productCode.toLowerCase().includes(searchTerm)
+    );
   }
 } 

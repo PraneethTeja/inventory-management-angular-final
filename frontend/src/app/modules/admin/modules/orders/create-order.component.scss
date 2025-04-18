@@ -387,6 +387,20 @@
 // Combo selection grid
 .combo-selection {
   margin-bottom: 1.5rem;
+
+  input[type="text"] {
+    border: 2px solid #ccc; // Thicker border
+    border-radius: 4px; // Less rounded corners
+    padding: 10px; // Add some padding for better appearance
+    width: 100%; // Make the input take full width
+    box-sizing: border-box; // Ensure padding is included in width
+      margin-bottom: 20px; // Add space below the search bar
+
+    &:focus {
+      border-color: #007bff; // Change border color on focus
+      outline: none; // Remove default outline
+    }
+  }
   
   h3 {
     margin-top: 0;

@@ -9,9 +9,14 @@
 }
 
 html, body {
-  height: 100%;
+  margin: 0;
+  padding: 0;
   width: 100%;
   overflow-x: hidden;
+  overflow-y: visible !important;
+  position: static;
+  height: auto !important;
+  min-height: 100%;
 }
 
 body {
@@ -19,6 +24,12 @@ body {
   color: #333;
   background-color: #fff;
   line-height: 1.6;
+}
+
+app-root {
+  display: block;
+  width: 100%;
+  min-height: 100vh;
 }
 
 /* Custom Variables */

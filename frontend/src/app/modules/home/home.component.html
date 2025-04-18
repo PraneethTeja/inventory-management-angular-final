@@ -1,22 +1,6 @@
 <div class="home-container">
-  <!-- Header with navigation -->
-  <header class="main-header">
-    <div class="container">
-      <div class="header-content">
-        <nav class="nav-links">
-          <a routerLink="/chains" class="nav-link">Chains</a>
-          <a routerLink="/pendants" class="nav-link">Pendants</a>
-          <a routerLink="/create-combination" class="nav-link">Create Combination</a>
-        </nav>
-        <div class="right-actions">
-          <a routerLink="/cart" class="cart-icon">
-            <i class="material-icons">shopping_cart</i>
-          </a>
-          <a routerLink="/auth/login" class="login-btn">Login</a>
-        </div>
-      </div>
-    </div>
-  </header>
+  <!-- Use the shared navbar component -->
+  <app-navbar [activePage]="'home'" [cartItemCount]="cartItemCount"></app-navbar>
 
   <!-- Hero Section -->
   <section class="hero-section">

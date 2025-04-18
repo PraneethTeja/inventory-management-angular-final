@@ -1,0 +1,79 @@
+<div class="product-list-container scrollable-content">
+  <!-- Use the shared navbar component -->
+  <app-navbar [activePage]="'shop'" [cartItemCount]="cartItemCount"></app-navbar>
+
+  <div class="container main-content">
+    <!-- Title and search bar -->
+    <div class="products-header">
+      <h2 class="page-title">{{pageTitle}}</h2>
+      <div class="search-container">
+        <input type="text" [(ngModel)]="searchTerm" (input)="onSearchChange()" placeholder="Search products..."
+          class="search-input">
+        <i class="material-icons search-icon">search</i>
+      </div>
+    </div>
+
+    <!-- Category filters -->
+    <div class="category-filters">
+      <a routerLink="/products" [class.active]="!selectedCategory" class="filter-item">All Products</a>
+      <a routerLink="/products" [queryParams]="{category: 'pendant'}" [class.active]="selectedCategory === 'pendant'"
+        class="filter-item">Pendants</a>
+      <a routerLink="/products" [queryParams]="{category: 'chain'}" [class.active]="selectedCategory === 'chain'"
+        class="filter-item">Chains</a>
+    </div>
+
+    <!-- Loading state -->
+    <div *ngIf="loading" class="loading">
+      <div class="loader"></div>
+      <p>Loading products...</p>
+    </div>
+
+    <!-- Empty state -->
+    <div *ngIf="!loading && (filteredProducts$ | async)?.length === 0" class="no-products">
+      <div class="info-icon">
+        <i class="material-icons">search_off</i>
+      </div>
+      <p>No products found matching your criteria.</p>
+      <button class="reset-filters-btn" (click)="resetFilters()">Reset filters</button>
+    </div>
+
+    <!-- Products grid -->
+    <div class="product-grid">
+      <div *ngFor="let product of filteredProducts$ | async" class="product-card">
+        <div class="product-image" [routerLink]="['/products', product._id]">
+          <img [src]="product.imageUrl || 'assets/images/product-placeholder.jpg'" [alt]="product.name">
+          <span class="discount-badge" *ngIf="product.discount">-{{product.discount.percentage}}%</span>
+          <span class="stock-badge out-of-stock" *ngIf="!product.inStock">Out of Stock</span>
+          <span class="stock-badge low-stock" *ngIf="product.inStock && product.stockQuantity <= 5">Low Stock</span>
+        </div>
+        <div class="product-info">
+          <h3 class="product-title" [routerLink]="['/products', product._id]">{{ product.name }}</h3>
+          <p class="product-category">{{ product.category | titlecase }}</p>
+          <div class="price-container">
+            <p class="product-price" *ngIf="!product.discount">₹{{ product.price }}</p>
+            <div class="discount-price" *ngIf="product.discount">
+              <p class="original-price">₹{{ product.price }}</p>
+              <p class="sale-price">₹{{ calculateDiscountedPrice(product) }}</p>
+            </div>
+          </div>
+          <div class="product-actions">
+            <a [routerLink]="['/products', product._id]" class="btn-view">View Details</a>
+            <button (click)="addToCart(product)" class="btn-primary" [disabled]="!product.inStock">
+              <i class="material-icons">shopping_cart</i>
+              {{ product.inStock ? 'Add to Cart' : 'Out of Stock' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Load more button -->
+    <div class="load-more-container"
+      *ngIf="!loading && (filteredProducts$ | async)?.length && (filteredProducts$ | async)!.length > 0 && hasMoreProducts">
+      <button class="load-more-btn" (click)="loadMoreProducts()" [disabled]="loadingMore">
+        <span *ngIf="!loadingMore">Load More Products</span>
+        <span *ngIf="loadingMore">Loading...</span>
+      </button>
+    </div>
+  </div>
+</div>

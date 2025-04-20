@@ -57,6 +57,9 @@ export interface CombinationDetails {
     id: string;
     name: string;
     price: number;
+    type?: string;
+    size?: string;
+    layer?: string;
   };
 }
 

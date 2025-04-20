@@ -18,6 +18,19 @@
     </div>
   </div>
 
+  <!-- Search Filter -->
+  <div class="search-filter">
+    <div class="search-input-container">
+      <input type="text" placeholder="Search by name or product code" [(ngModel)]="searchTerm" (keyup)="applySearch()">
+      <button class="search-button" (click)="applySearch()">
+        <i class="material-icons">search</i>
+      </button>
+      <button class="clear-button" *ngIf="searchTerm" (click)="clearSearch()">
+        <i class="material-icons">close</i>
+      </button>
+    </div>
+  </div>
+
   <!-- Error Message -->
   <div class="error-message" *ngIf="error">{{ error }}</div>
 
@@ -233,8 +246,6 @@
               <select id="edit-category" formControlName="category">
                 <option value="chain">Chain</option>
                 <option value="pendant">Pendant</option>
-                <option value="combination">Combination</option>
-                <option value="accessory">Accessory</option>
               </select>
             </div>
 

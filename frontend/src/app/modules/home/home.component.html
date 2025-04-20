@@ -62,18 +62,40 @@
         <p>No featured products available</p>
       </div>
 
-      <div class="product-grid">
-        <div *ngFor="let product of featuredProducts$ | async" class="product-card">
-          <div class="product-image">
-            <img [src]="product.imageUrl" [alt]="product.name">
+      <div class="featured-carousel" *ngIf="(featuredProducts$ | async) as products">
+        <ng-container *ngIf="products.length > 0">
+          <button class="carousel-control prev-btn" (click)="prevSlide()">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+
+          <div class="carousel-container">
+            <div class="carousel-track" [style.transform]="'translateX(' + (-currentSlide * 100 / slidesToShow) + '%)'">
+              <div *ngFor="let product of products" class="carousel-item">
+                <div class="product-card" [routerLink]="['/products', product._id]">
+                  <div class="product-image">
+                    <img [src]="product.imageUrl || 'assets/images/placeholder.jpg'" [alt]="product.name">
+                    <span class="featured-badge">Featured</span>
+                  </div>
+                  <div class="product-info">
+                    <h3 class="product-title">{{ product.name }}</h3>
+                    <p class="product-category">{{ product.category }}</p>
+                    <p class="product-price">₹{{ product.price }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="product-info">
-            <h3 class="product-title">{{ product.name }}</h3>
-            <p class="product-category">{{ product.category }}</p>
-            <p class="product-price">₹{{ product.price }}</p>
-            <a [routerLink]="['/products', product._id]" class="btn-view">View Details</a>
+
+          <button class="carousel-control next-btn" (click)="nextSlide()">
+            <i class="fas fa-chevron-right"></i>
+          </button>
+
+          <div class="carousel-indicators">
+            <button *ngFor="let _ of products; let i = index" [class.active]="currentSlide === i" (click)="goToSlide(i)"
+              class="indicator-dot">
+            </button>
           </div>
-        </div>
+        </ng-container>
       </div>
     </div>
   </section>

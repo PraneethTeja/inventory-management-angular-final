@@ -1,6 +1,9 @@
 <div class="create-order-page">
   <div class="page-header">
     <h2>Create New Order</h2>
+    <button class="create-combo-btn" (click)="openComboModal()">
+      <i class="material-icons">add</i> Create Combination
+    </button>
   </div>
 
   <!-- Error message -->
@@ -28,54 +31,6 @@
   </div>
 
   <div class="create-order-container">
-    <!-- Product Selection (Left) -->
-    <div class="product-selection" *ngIf="!isLoading && !success">
-      <!-- Tab Navigation -->
-      <div class="tab-navigation">
-        <button class="tab-btn" [class.active]="activeTab === 'chains'" (click)="changeTab('chains')">
-          Chains
-        </button>
-        <button class="tab-btn" [class.active]="activeTab === 'pendants'" (click)="changeTab('pendants')">
-          Pendants
-        </button>
-        <button class="tab-btn" [class.active]="activeTab === 'create-combo'" (click)="openComboModal()">
-          Create Combo
-        </button>
-      </div>
-
-      <!-- Product Grid - Chains -->
-      <div class="products-grid" *ngIf="activeTab === 'chains'">
-        <div class="product-card" *ngFor="let product of chains">
-          <div class="product-image">
-            <img [src]="product.imageUrl || 'assets/images/placeholder.jpg'" [alt]="product.name">
-          </div>
-          <div class="product-info">
-            <h3>{{ product.name }}</h3>
-            <div class="price">₹{{ product.price }}</div>
-          </div>
-          <div class="product-actions">
-            <button (click)="addItemToOrder(product)">Add to Order</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Product Grid - Pendants -->
-      <div class="products-grid" *ngIf="activeTab === 'pendants'">
-        <div class="product-card" *ngFor="let product of pendants">
-          <div class="product-image">
-            <img [src]="product.imageUrl || 'assets/images/placeholder.jpg'" [alt]="product.name">
-          </div>
-          <div class="product-info">
-            <h3>{{ product.name }}</h3>
-            <div class="price">₹{{ product.price }}</div>
-          </div>
-          <div class="product-actions">
-            <button (click)="addItemToOrder(product)">Add to Order</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <!-- Order Details (Right) -->
     <div class="order-details" *ngIf="!isLoading && !success">
       <!-- Customer Information -->
@@ -121,13 +76,16 @@
           <div class="order-items" *ngIf="orderItems.length > 0">
             <div class="item" *ngFor="let item of orderItems; let i = index">
               <div class="item-image">
-                <img [src]="item.product.imageUrl || 'assets/images/placeholder.jpg'" [alt]="item.product.name">
+                <img [src]="item.product.imageUrl || 'assets/images/placeholder.jpg'" [alt]="'product-image'">
               </div>
               <div class="item-details">
-                <div class="item-name">{{ item.product.name }}</div>
+                <div class="item-name" [title]="item.product.name">{{ item.product.name }}</div>
                 <div class="item-category">{{ item.product.category | titlecase }}</div>
                 <div class="combo-details" *ngIf="item.isCombo">
-                  Combination: {{ item.pendantProduct.name }} + {{ item.chainProduct.name }}
+                  <div>Type: {{ item.chainType }}</div>
+                  <div>Size: {{ item.chainSize }}</div>
+                  <div>Layer: {{ item.chainLayer }}</div>
+                  <div>Pendants: {{ item.pendantProducts.length }}</div>
                 </div>
               </div>
               <div class="item-price">
@@ -146,12 +104,8 @@
           </div>
 
           <div *ngIf="orderItems.length === 0" class="empty-order">
-            <p>No items in order yet. Add products from the selection.</p>
+            <p>No items in order yet. Click the "Create Combination" button to add items.</p>
           </div>
-
-          <button class="add-combo-btn" (click)="openComboModal()" *ngIf="orderItems.length > 0">
-            <i class="material-icons">add</i> Add Combination
-          </button>
         </div>
       </div>
 
@@ -223,8 +177,41 @@
               <div class="selection-image">
                 <img [src]="pendant.imageUrl || 'assets/images/placeholder.jpg'" [alt]="pendant.name">
               </div>
-              <div class="selection-name">{{ pendant.name }}</div>
+              <div class="selection-name" [title]="pendant.name">{{ pendant.name }}</div>
               <div class="selection-price">₹{{ pendant.price }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chain Type & Size Selection -->
+        <div class="chain-options">
+          <div class="option-group">
+            <h3>Chain Type</h3>
+            <div class="option-buttons">
+              <button *ngFor="let type of chainTypes" [class.active]="selectedChainType === type"
+                (click)="selectedChainType = type">
+                {{ type }}
+              </button>
+            </div>
+          </div>
+
+          <div class="option-group">
+            <h3>Chain Size</h3>
+            <div class="option-buttons">
+              <button *ngFor="let size of chainSizes" [class.active]="selectedChainSize === size"
+                (click)="selectedChainSize = size">
+                {{ size }}
+              </button>
+            </div>
+          </div>
+
+          <div class="option-group">
+            <h3>Chain Layer</h3>
+            <div class="option-buttons">
+              <button *ngFor="let layer of chainLayers" [class.active]="selectedChainLayer === layer"
+                (click)="selectedChainLayer = layer">
+                {{ layer }}
+              </button>
             </div>
           </div>
         </div>
@@ -239,7 +226,7 @@
               <div class="selection-image">
                 <img [src]="chain.imageUrl || 'assets/images/placeholder.jpg'" [alt]="chain.name">
               </div>
-              <div class="selection-name">{{ chain.name }}</div>
+              <div class="selection-name" [title]="chain.name">{{ chain.name }}</div>
               <div class="selection-price">₹{{ chain.price }}</div>
             </div>
           </div>
@@ -248,9 +235,10 @@
         <!-- Action Buttons -->
         <div class="form-actions">
           <button type="button" class="cancel-btn" (click)="closeComboModal()">Cancel</button>
-          <button type="button" class="submit-btn" [disabled]="!selectedPendants.length || !selectedChain"
+          <button type="button" class="add-btn"
+            [disabled]="selectedPendants.length === 0 || !selectedChain || !selectedChainType || !selectedChainSize || !selectedChainLayer"
             (click)="addComboToOrder()">
-            Add Combination
+            Add to Order
           </button>
         </div>
       </div>

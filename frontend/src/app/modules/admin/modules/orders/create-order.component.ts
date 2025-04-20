@@ -10,6 +10,14 @@ import { ProductService } from '../../../../core/services/product.service';
 import { CartService } from '../../../../core/services/cart.service';
 import { Product } from '../../../../core/models/product.model';
 import { OrderItem, OrderStatus, PaymentMethod, PaymentStatus } from '../../../../core/models/order.model';
+import {
+  collection,
+  getDocs,
+  query,
+  orderBy,
+  limit
+} from 'firebase/firestore';
+import { firestore } from '../../../../app.config';
 
 @Component({
   selector: 'app-create-order',
@@ -36,6 +44,14 @@ export class CreateOrderComponent implements OnInit {
   chainSearchTerm = '';
   pendantSearchTerm = '';
 
+  // Chain type and size options
+  chainTypes = ['Chain', 'Bracelet', 'Anklet'];
+  chainSizes = ['Small', 'Medium', 'Large'];
+  chainLayers = ['Single', 'Double', 'Triple'];
+  selectedChainType = '';
+  selectedChainSize = '';
+  selectedChainLayer = '';
+
   // Form groups
   customerForm: FormGroup;
   orderNotesForm: FormGroup;
@@ -46,7 +62,7 @@ export class CreateOrderComponent implements OnInit {
   total = 0;
 
   // UI state
-  activeTab = 'chains';
+  activeTab = 'combination'; // Default to combination tab only
   showAddComboModal = false;
 
   // WhatsApp integration
@@ -84,15 +100,24 @@ export class CreateOrderComponent implements OnInit {
     this.error = '';
 
     try {
-      // Use mock data directly instead of API call
-      this.products = this.getMockProducts();
+      this.fetchProductsFromFirestore()
+        .then(products => {
+          this.products = products;
+          // Filter products by category
+          this.pendants = this.products.filter((p: Product) => p.category === 'pendant');
+          this.chains = this.products.filter((p: Product) => p.category === 'chain');
 
-      // Filter products by category
-      this.pendants = this.products.filter((p: Product) => p.category === 'pendant');
-      this.chains = this.products.filter((p: Product) => p.category === 'chain');
+          this.filteredPendants = this.pendants;
+          this.filteredChains = this.chains;
 
-      this.isLoading = false;
-      console.log('Products loaded from mock data:', this.products);
+          this.isLoading = false;
+          console.log('Products loaded from Firestore:', this.products);
+        })
+        .catch(err => {
+          this.error = 'Failed to load products. Please try again.';
+          this.isLoading = false;
+          console.error('Error loading products:', err);
+        });
     } catch (err) {
       this.error = 'Failed to load products. Please try again.';
       this.isLoading = false;
@@ -100,807 +125,63 @@ export class CreateOrderComponent implements OnInit {
     }
   }
 
-  // Mock data for development purposes
-  getMockProducts(): Product[] {
-    return [
-      {
-        _id: '1',
-        name: 'Golden Chain Necklace',
-        category: 'chain',
-        price: 1200,
-        description: 'Beautiful gold-plated chain necklace, perfect for casual and formal wear.',
-        inStock: true,
-        productCode: 'JW-C001',
-        imageUrl: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80',
-        imageUrls: [],
-        stockQuantity: 15,
-        details: {
-          material: 'Gold-plated brass',
-          weight: '8g',
-          dimensions: '18 inches',
-          features: ['Tarnish-resistant', 'Hypoallergenic']
-        },
-        featured: true,
-        discount: {
-          percentage: 10,
-          validUntil: new Date('2023-12-31')
-        },
-        tags: ['gold', 'chain', 'necklace']
-      },
-      {
-        _id: '2',
-        name: 'Silver Pendant - Heart',
-        category: 'pendant',
-        price: 850,
-        description: 'Elegant heart-shaped pendant made of sterling silver.',
-        inStock: true,
-        productCode: 'JW-P001',
-        imageUrl: 'https://images.unsplash.com/photo-1611085583191-a3b181a88401?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80',
-        imageUrls: [],
-        stockQuantity: 8,
-        details: {
-          material: 'Sterling Silver',
-          weight: '5g',
-          dimensions: '2cm x 2cm',
-          features: ['Polished finish', 'Hypoallergenic']
-        },
-        featured: false,
-        discount: {
-          percentage: 0,
-          validUntil: undefined
-        },
-        tags: ['silver', 'pendant', 'heart']
-      },
-      {
-        _id: '3',
-        name: 'Rose Gold Chain with Pendant',
-        category: 'combination',
-        price: 1800,
-        description: 'Beautiful rose gold chain with a matching flower pendant.',
-        inStock: false,
-        productCode: 'JW-CP001',
-        imageUrl: 'https://images.unsplash.com/photo-1602173574767-37ac01994b2a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80',
-        imageUrls: [],
-        stockQuantity: 0,
-        details: {
-          material: 'Rose Gold Plated',
-          weight: '12g',
-          dimensions: '20 inches chain, 3cm pendant',
-          features: ['Adjustable length', 'Gift box included']
-        },
-        featured: true,
-        discount: {
-          percentage: 15,
-          validUntil: new Date('2023-11-30')
-        },
-        tags: ['rose gold', 'pendant', 'chain', 'combination']
-      },
-      {
-        _id: '4',
-        name: 'Pearl Earrings',
-        category: 'accessory',
-        price: 950,
-        description: 'Elegant pearl earrings with silver studs.',
-        inStock: true,
-        productCode: 'JW-A001',
-        imageUrl: 'https://images.unsplash.com/photo-1535632787350-4e68ef0ac584?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80',
-        imageUrls: [],
-        stockQuantity: 12,
-        details: {
-          material: 'Freshwater Pearl, Sterling Silver',
-          weight: '4g',
-          dimensions: '1cm diameter',
-          features: ['Freshwater pearls', 'Push back closure']
-        },
-        featured: false,
-        discount: {
-          percentage: 0,
-          validUntil: undefined
-        },
-        tags: ['pearl', 'earrings', 'silver']
-      },
-      {
-        _id: '5',
-        name: 'Gold Bangle Set',
-        category: 'accessory',
-        price: 2400,
-        description: 'Set of 3 elegant gold bangles with intricate designs.',
-        inStock: true,
-        productCode: 'JW-A002',
-        imageUrl: 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?ixlib=rb-4.0.3',
-        imageUrls: [],
-        stockQuantity: 8,
-        details: {
-          material: '18K Gold Plated',
-          weight: '30g',
-          dimensions: '2.5 inch diameter',
-          features: ['Set of 3', 'Traditional design']
-        },
-        featured: true,
-        discount: {
-          percentage: 10,
-          validUntil: new Date('2023-12-15')
-        },
-        tags: ['gold', 'bangles', 'set']
-      },
-      {
-        _id: '6',
-        name: 'Silver Anklet',
-        category: 'accessory',
-        price: 850,
-        description: 'Delicate silver anklet with small bell charms.',
-        inStock: true,
-        productCode: 'JW-A003',
-        imageUrl: 'https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?ixlib=rb-4.0.3',
-        imageUrls: [],
-        stockQuantity: 15,
-        details: {
-          material: 'Sterling Silver',
-          weight: '8g',
-          dimensions: 'Adjustable 9-11 inches',
-          features: ['Bell charms', 'Adjustable']
-        },
-        featured: false,
-        discount: {
-          percentage: 0,
-          validUntil: undefined
-        },
-        tags: ['silver', 'anklet', 'bells']
-      },
-      {
-        _id: '7',
-        name: 'Diamond Pendant',
-        category: 'pendant',
-        price: 3500,
-        description: 'Elegant diamond pendant with white gold chain.',
-        inStock: true,
-        productCode: 'JW-P003',
-        imageUrl: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?ixlib=rb-4.0.3',
-        imageUrls: [],
-        stockQuantity: 5,
-        details: {
-          material: 'White Gold, Diamond',
-          weight: '3g',
-          dimensions: '1.5cm pendant, 18 inch chain',
-          features: ['0.5 carat diamond', 'Gift box included']
-        },
-        featured: true,
-        discount: {
-          percentage: 5,
-          validUntil: new Date('2023-12-25')
-        },
-        tags: ['diamond', 'pendant', 'white gold']
-      },
-      {
-        _id: '8',
-        name: 'Gold Chain Necklace',
-        category: 'chain',
-        price: 1200,
-        description: 'Classic gold chain necklace with lobster clasp.',
-        inStock: true,
-        productCode: 'JW-C003',
-        imageUrl: 'https://images.unsplash.com/photo-1599643477877-530eb83abc8e?ixlib=rb-4.0.3',
-        imageUrls: [],
-        stockQuantity: 20,
-        details: {
-          material: '14K Gold Plated',
-          weight: '10g',
-          dimensions: '20 inches',
-          features: ['Lobster clasp', 'Tarnish resistant']
-        },
-        featured: false,
-        discount: {
-          percentage: 0,
-          validUntil: undefined
-        },
-        tags: ['gold', 'chain', 'necklace']
-      },
-      {
-        _id: '9',
-        name: 'Ruby Pendant',
-        category: 'pendant',
-        price: 2800,
-        description: 'Stunning ruby pendant with gold setting.',
-        inStock: true,
-        productCode: 'JW-P004',
-        imageUrl: 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?ixlib=rb-4.0.3',
-        imageUrls: [],
-        stockQuantity: 7,
-        details: {
-          material: 'Gold, Ruby',
-          weight: '4g',
-          dimensions: '1.2cm pendant',
-          features: ['Natural ruby', 'Handcrafted']
-        },
-        featured: true,
-        discount: {
-          percentage: 0,
-          validUntil: undefined
-        },
-        tags: ['ruby', 'pendant', 'gold']
-      },
-      {
-        _id: '10',
-        name: 'Silver Toe Ring Set',
-        category: 'accessory',
-        price: 550,
-        description: 'Set of 5 silver toe rings with different designs.',
-        inStock: true,
-        productCode: 'JW-A004',
-        imageUrl: 'https://images.unsplash.com/photo-1611591437280-5d8b169981a1?ixlib=rb-4.0.3',
-        imageUrls: [],
-        stockQuantity: 25,
-        details: {
-          material: 'Sterling Silver',
-          weight: '5g',
-          dimensions: 'Adjustable size',
-          features: ['Set of 5', 'Traditional designs']
-        },
-        featured: false,
-        discount: {
-          percentage: 15,
-          validUntil: new Date('2023-11-20')
-        },
-        tags: ['silver', 'toe ring', 'set']
-      },
-      {
-        _id: '11',
-        name: 'Pearl Pendant',
-        category: 'pendant',
-        price: 1500,
-        description: 'Elegant pearl pendant with silver setting.',
-        inStock: true,
-        productCode: 'JW-P005',
-        imageUrl: 'https://images.unsplash.com/photo-1602752250015-52934bc45613?ixlib=rb-4.0.3',
-        imageUrls: [],
-        stockQuantity: 10,
-        details: {
-          material: 'Sterling Silver, Freshwater Pearl',
-          weight: '5g',
-          dimensions: '1.5cm pendant',
-          features: ['Freshwater pearl', 'Rhodium plated']
-        },
-        featured: false,
-        discount: {
-          percentage: 0,
-          validUntil: undefined
-        },
-        tags: ['pearl', 'pendant', 'silver']
-      },
-      {
-        _id: '12',
-        name: 'Platinum Chain',
-        category: 'chain',
-        price: 3200,
-        description: 'Premium platinum chain with box link design.',
-        inStock: true,
-        productCode: 'JW-C004',
-        imageUrl: 'https://images.unsplash.com/photo-1599643478539-a9e57b638d6d?ixlib=rb-4.0.3',
-        imageUrls: [],
-        stockQuantity: 5,
-        details: {
-          material: 'Platinum',
-          weight: '15g',
-          dimensions: '22 inches',
-          features: ['Box link design', 'Hypoallergenic']
-        },
-        featured: true,
-        discount: {
-          percentage: 5,
-          validUntil: new Date('2023-12-31')
-        },
-        tags: ['platinum', 'chain', 'premium']
-      },
-      {
-        _id: '13',
-        name: 'Emerald Earrings',
-        category: 'accessory',
-        price: 2700,
-        description: 'Beautiful emerald stud earrings with gold setting.',
-        inStock: true,
-        productCode: 'JW-A005',
-        imageUrl: 'https://images.unsplash.com/photo-1589128777073-263566ae5e4d?ixlib=rb-4.0.3',
-        imageUrls: [],
-        stockQuantity: 8,
-        details: {
-          material: '18K Gold, Emerald',
-          weight: '4g',
-          dimensions: '0.8cm diameter',
-          features: ['Natural emeralds', 'Butterfly backs']
-        },
-        featured: true,
-        discount: {
-          percentage: 0,
-          validUntil: undefined
-        },
-        tags: ['emerald', 'earrings', 'gold']
-      },
-      {
-        _id: '14',
-        name: 'Sapphire Pendant',
-        category: 'pendant',
-        price: 3100,
-        description: 'Exquisite sapphire pendant with white gold setting.',
-        inStock: true,
-        productCode: 'JW-P006',
-        imageUrl: 'https://images.unsplash.com/photo-1605100804746-b4888132db37?ixlib=rb-4.0.3',
-        imageUrls: [],
-        stockQuantity: 6,
-        details: {
-          material: 'White Gold, Sapphire',
-          weight: '4g',
-          dimensions: '1.2cm pendant',
-          features: ['Natural sapphire', 'Handcrafted']
-        },
-        featured: false,
-        discount: {
-          percentage: 10,
-          validUntil: new Date('2023-11-15')
-        },
-        tags: ['sapphire', 'pendant', 'white gold']
-      },
-      {
-        _id: '15',
-        name: 'Silver Link Bracelet',
-        category: 'accessory',
-        price: 980,
-        description: 'Stylish silver link bracelet with toggle clasp.',
-        inStock: true,
-        productCode: 'JW-A006',
-        imageUrl: 'https://images.unsplash.com/photo-1573408301185-9146fe634ad0?ixlib=rb-4.0.3',
-        imageUrls: [],
-        stockQuantity: 15,
-        details: {
-          material: 'Sterling Silver',
-          weight: '12g',
-          dimensions: '7.5 inches',
-          features: ['Toggle clasp', 'Polished finish']
-        },
-        featured: false,
-        discount: {
-          percentage: 0,
-          validUntil: undefined
-        },
-        tags: ['silver', 'bracelet', 'link']
-      },
-      {
-        _id: '16',
-        name: 'Rose Gold Hoop Earrings',
-        category: 'accessory',
-        price: 1100,
-        description: 'Elegant rose gold hoop earrings with click closure.',
-        inStock: true,
-        productCode: 'JW-A007',
-        imageUrl: 'https://images.unsplash.com/photo-1630019852942-7a3592373ed2?ixlib=rb-4.0.3',
-        imageUrls: [],
-        stockQuantity: 12,
-        details: {
-          material: 'Rose Gold Plated',
-          weight: '6g',
-          dimensions: '3cm diameter',
-          features: ['Click closure', 'Lightweight']
-        },
-        featured: true,
-        discount: {
-          percentage: 5,
-          validUntil: new Date('2023-12-10')
-        },
-        tags: ['rose gold', 'earrings', 'hoop']
-      },
-      {
-        _id: '17',
-        name: 'Twisted Gold Chain',
-        category: 'chain',
-        price: 1800,
-        description: 'Elegant twisted gold chain with secure clasp.',
-        inStock: true,
-        productCode: 'JW-C005',
-        imageUrl: 'https://images.unsplash.com/photo-1599643478467-8c97e94e3d22?ixlib=rb-4.0.3',
-        imageUrls: [],
-        stockQuantity: 10,
-        details: {
-          material: '18K Gold Plated',
-          weight: '14g',
-          dimensions: '18 inches',
-          features: ['Twisted design', 'Lobster clasp']
-        },
-        featured: false,
-        discount: {
-          percentage: 0,
-          validUntil: undefined
-        },
-        tags: ['gold', 'chain', 'twisted']
-      },
-      {
-        _id: '18',
-        name: 'Heart Pendant',
-        category: 'pendant',
-        price: 1300,
-        description: 'Lovely heart-shaped pendant with cubic zirconia.',
-        inStock: true,
-        productCode: 'JW-P007',
-        imageUrl: 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?ixlib=rb-4.0.3',
-        imageUrls: [],
-        stockQuantity: 18,
-        details: {
-          material: 'Sterling Silver, Cubic Zirconia',
-          weight: '3g',
-          dimensions: '1.5cm heart',
-          features: ['Heart shape', 'Sparkly finish']
-        },
-        featured: true,
-        discount: {
-          percentage: 15,
-          validUntil: new Date('2023-11-25')
-        },
-        tags: ['heart', 'pendant', 'silver']
-      },
-      {
-        _id: '19',
-        name: 'Gold Nose Pin',
-        category: 'accessory',
-        price: 650,
-        description: 'Delicate gold nose pin with small diamond.',
-        inStock: true,
-        productCode: 'JW-A008',
-        imageUrl: 'https://images.unsplash.com/photo-1611591437280-5d8b169981a1?ixlib=rb-4.0.3',
-        imageUrls: [],
-        stockQuantity: 25,
-        details: {
-          material: '14K Gold, Diamond',
-          weight: '0.5g',
-          dimensions: '0.3cm diameter',
-          features: ['Small diamond', 'Screw back']
-        },
-        featured: false,
-        discount: {
-          percentage: 0,
-          validUntil: undefined
-        },
-        tags: ['gold', 'nose pin', 'diamond']
-      },
-      {
-        _id: '20',
-        name: 'Silver Snake Chain',
-        category: 'chain',
-        price: 950,
-        description: 'Sleek silver snake chain with secure clasp.',
-        inStock: true,
-        productCode: 'JW-C006',
-        imageUrl: 'https://images.unsplash.com/photo-1599643478539-a9e57b638d6d?ixlib=rb-4.0.3',
-        imageUrls: [],
-        stockQuantity: 15,
-        details: {
-          material: 'Sterling Silver',
-          weight: '8g',
-          dimensions: '20 inches',
-          features: ['Snake design', 'Lobster clasp']
-        },
-        featured: false,
-        discount: {
-          percentage: 5,
-          validUntil: new Date('2023-12-05')
-        },
-        tags: ['silver', 'chain', 'snake']
-      },
-      {
-        _id: '21',
-        name: 'Turquoise Pendant',
-        category: 'pendant',
-        price: 1200,
-        description: 'Beautiful turquoise pendant with silver setting.',
-        inStock: true,
-        productCode: 'JW-P008',
-        imageUrl: 'https://images.unsplash.com/photo-1602752250015-52934bc45613?ixlib=rb-4.0.3',
-        imageUrls: [],
-        stockQuantity: 10,
-        details: {
-          material: 'Sterling Silver, Turquoise',
-          weight: '5g',
-          dimensions: '2cm pendant',
-          features: ['Natural turquoise', 'Boho style']
-        },
-        featured: true,
-        discount: {
-          percentage: 0,
-          validUntil: undefined
-        },
-        tags: ['turquoise', 'pendant', 'silver']
-      },
-      {
-        _id: '22',
-        name: 'Gold Tennis Bracelet',
-        category: 'accessory',
-        price: 2500,
-        description: 'Elegant gold tennis bracelet with cubic zirconia.',
-        inStock: true,
-        productCode: 'JW-A009',
-        imageUrl: 'https://images.unsplash.com/photo-1573408301185-9146fe634ad0?ixlib=rb-4.0.3',
-        imageUrls: [],
-        stockQuantity: 8,
-        details: {
-          material: '18K Gold Plated, Cubic Zirconia',
-          weight: '15g',
-          dimensions: '7 inches',
-          features: ['Tennis style', 'Safety clasp']
-        },
-        featured: true,
-        discount: {
-          percentage: 10,
-          validUntil: new Date('2023-11-30')
-        },
-        tags: ['gold', 'bracelet', 'tennis']
-      },
-      {
-        _id: '23',
-        name: 'Amethyst Pendant',
-        category: 'pendant',
-        price: 1700,
-        description: 'Stunning amethyst pendant with silver setting.',
-        inStock: true,
-        productCode: 'JW-P009',
-        imageUrl: 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?ixlib=rb-4.0.3',
-        imageUrls: [],
-        stockQuantity: 7,
-        details: {
-          material: 'Sterling Silver, Amethyst',
-          weight: '4g',
-          dimensions: '1.5cm pendant',
-          features: ['Natural amethyst', 'Handcrafted']
-        },
-        featured: false,
-        discount: {
-          percentage: 0,
-          validUntil: undefined
-        },
-        tags: ['amethyst', 'pendant', 'silver']
-      },
-      {
-        _id: '24',
-        name: 'Rope Gold Chain',
-        category: 'chain',
-        price: 2100,
-        description: 'Classic rope design gold chain with secure clasp.',
-        inStock: true,
-        productCode: 'JW-C007',
-        imageUrl: 'https://images.unsplash.com/photo-1599643478467-8c97e94e3d22?ixlib=rb-4.0.3',
-        imageUrls: [],
-        stockQuantity: 10,
-        details: {
-          material: '14K Gold Plated',
-          weight: '18g',
-          dimensions: '22 inches',
-          features: ['Rope design', 'Lobster clasp']
-        },
-        featured: true,
-        discount: {
-          percentage: 5,
-          validUntil: new Date('2023-12-15')
-        },
-        tags: ['gold', 'chain', 'rope']
-      },
-      {
-        _id: '25',
-        name: 'Silver Charm Bracelet',
-        category: 'accessory',
-        price: 1100,
-        description: 'Stylish silver charm bracelet with 5 charms included.',
-        inStock: true,
-        productCode: 'JW-A010',
-        imageUrl: 'https://images.unsplash.com/photo-1573408301185-9146fe634ad0?ixlib=rb-4.0.3',
-        imageUrls: [],
-        stockQuantity: 12,
-        details: {
-          material: 'Sterling Silver',
-          weight: '14g',
-          dimensions: '7.5 inches',
-          features: ['5 charms included', 'Toggle clasp']
-        },
-        featured: false,
-        discount: {
-          percentage: 0,
-          validUntil: undefined
-        },
-        tags: ['silver', 'bracelet', 'charm']
-      },
-      {
-        _id: '26',
-        name: 'Opal Pendant',
-        category: 'pendant',
-        price: 1900,
-        description: 'Beautiful opal pendant with gold setting.',
-        inStock: true,
-        productCode: 'JW-P010',
-        imageUrl: 'https://images.unsplash.com/photo-1602752250015-52934bc45613?ixlib=rb-4.0.3',
-        imageUrls: [],
-        stockQuantity: 6,
-        details: {
-          material: '14K Gold, Opal',
-          weight: '3g',
-          dimensions: '1.2cm pendant',
-          features: ['Natural opal', 'Iridescent']
-        },
-        featured: true,
-        discount: {
-          percentage: 10,
-          validUntil: new Date('2023-11-20')
-        },
-        tags: ['opal', 'pendant', 'gold']
-      },
-      {
-        _id: '27',
-        name: 'Diamond Stud Earrings',
-        category: 'accessory',
-        price: 3200,
-        description: 'Classic diamond stud earrings with white gold setting.',
-        inStock: true,
-        productCode: 'JW-A011',
-        imageUrl: 'https://images.unsplash.com/photo-1589128777073-263566ae5e4d?ixlib=rb-4.0.3',
-        imageUrls: [],
-        stockQuantity: 5,
-        details: {
-          material: 'White Gold, Diamond',
-          weight: '2g',
-          dimensions: '0.5cm diameter',
-          features: ['0.25 carat each', 'Screw backs']
-        },
-        featured: true,
-        discount: {
-          percentage: 0,
-          validUntil: undefined
-        },
-        tags: ['diamond', 'earrings', 'white gold']
-      },
-      {
-        _id: '28',
-        name: 'Box Chain Silver',
-        category: 'chain',
-        price: 850,
-        description: 'Sleek box chain design in sterling silver.',
-        inStock: true,
-        productCode: 'JW-C008',
-        imageUrl: 'https://images.unsplash.com/photo-1599643478539-a9e57b638d6d?ixlib=rb-4.0.3',
-        imageUrls: [],
-        stockQuantity: 20,
-        details: {
-          material: 'Sterling Silver',
-          weight: '10g',
-          dimensions: '20 inches',
-          features: ['Box design', 'Spring ring clasp']
-        },
-        featured: false,
-        discount: {
-          percentage: 5,
-          validUntil: new Date('2023-12-01')
-        },
-        tags: ['silver', 'chain', 'box']
-      },
-      {
-        _id: '29',
-        name: 'Citrine Pendant',
-        category: 'pendant',
-        price: 1400,
-        description: 'Vibrant citrine pendant with gold setting.',
-        inStock: true,
-        productCode: 'JW-P011',
-        imageUrl: 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?ixlib=rb-4.0.3',
-        imageUrls: [],
-        stockQuantity: 8,
-        details: {
-          material: '14K Gold, Citrine',
-          weight: '4g',
-          dimensions: '1.3cm pendant',
-          features: ['Natural citrine', 'Handcrafted']
-        },
-        featured: false,
-        discount: {
-          percentage: 0,
-          validUntil: undefined
-        },
-        tags: ['citrine', 'pendant', 'gold']
-      },
-      {
-        _id: '30',
-        name: 'Pearl Necklace',
-        category: 'accessory',
-        price: 2200,
-        description: 'Elegant freshwater pearl necklace with silver clasp.',
-        inStock: true,
-        productCode: 'JW-A012',
-        imageUrl: 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?ixlib=rb-4.0.3',
-        imageUrls: [],
-        stockQuantity: 7,
-        details: {
-          material: 'Freshwater Pearl, Sterling Silver',
-          weight: '25g',
-          dimensions: '18 inches',
-          features: ['Graduated pearls', 'Silver clasp']
-        },
-        featured: true,
-        discount: {
-          percentage: 10,
-          validUntil: new Date('2023-11-15')
-        },
-        tags: ['pearl', 'necklace', 'silver']
-      },
-      {
-        _id: '31',
-        name: 'Figaro Gold Chain',
-        category: 'chain',
-        price: 1700,
-        description: 'Classic figaro link gold chain with secure clasp.',
-        inStock: true,
-        productCode: 'JW-C009',
-        imageUrl: 'https://images.unsplash.com/photo-1599643478467-8c97e94e3d22?ixlib=rb-4.0.3',
-        imageUrls: [],
-        stockQuantity: 12,
-        details: {
-          material: '18K Gold Plated',
-          weight: '16g',
-          dimensions: '24 inches',
-          features: ['Figaro link', 'Lobster clasp']
-        },
-        featured: false,
-        discount: {
-          percentage: 0,
-          validUntil: undefined
-        },
-        tags: ['gold', 'chain', 'figaro']
-      },
-      {
-        _id: '32',
-        name: 'Garnet Pendant',
-        category: 'pendant',
-        price: 1600,
-        description: 'Rich red garnet pendant with silver setting.',
-        inStock: true,
-        productCode: 'JW-P012',
-        imageUrl: 'https://images.unsplash.com/photo-1602752250015-52934bc45613?ixlib=rb-4.0.3',
-        imageUrls: [],
-        stockQuantity: 9,
-        details: {
-          material: 'Sterling Silver, Garnet',
-          weight: '4g',
-          dimensions: '1.4cm pendant',
-          features: ['Natural garnet', 'Deep red color']
-        },
-        featured: true,
-        discount: {
-          percentage: 5,
-          validUntil: new Date('2023-12-10')
-        },
-        tags: ['garnet', 'pendant', 'silver']
-      }
-    ];
-  }
+  async fetchProductsFromFirestore(): Promise<Product[]> {
+    try {
+      const productsQuery = query(
+        collection(firestore, 'products'),
+        orderBy('createdAt', 'desc'),
+        limit(100)
+      );
 
-  changeTab(tab: string): void {
-    this.activeTab = tab;
-  }
+      const querySnapshot = await getDocs(productsQuery);
+      const products: Product[] = [];
 
-  addItemToOrder(product: Product): void {
-    // Check if product is already in order
-    const existingItem = this.orderItems.find(item =>
-      item.product._id === product._id && !item.isCombo);
+      querySnapshot.forEach((doc) => {
+        const data = doc.data() as any;
 
-    if (existingItem) {
-      // Increase quantity
-      existingItem.quantity += 1;
-    } else {
-      // Add new item
-      this.orderItems.push({
-        product: product,
-        quantity: 1,
-        isCombo: false
+        // Calculate discounted price
+        const price = data['price'] || 0;
+        const discountPercentage = data['discount']?.percentage || 0;
+        const discountedPrice = discountPercentage > 0
+          ? price - (price * discountPercentage / 100)
+          : price;
+
+        // Convert Firebase timestamp to Date if needed
+        const createdAt = data['createdAt']?.toDate ? data['createdAt'].toDate() : new Date(data['createdAt']);
+        const updatedAt = data['updatedAt']?.toDate ? data['updatedAt'].toDate() : new Date(data['updatedAt']);
+        let validUntil = null;
+        if (data['discount']?.validUntil) {
+          validUntil = data['discount'].validUntil?.toDate
+            ? data['discount'].validUntil.toDate()
+            : new Date(data['discount'].validUntil);
+        }
+
+        products.push({
+          _id: doc.id,
+          ...data,
+          createdAt,
+          updatedAt,
+          discount: {
+            ...data['discount'],
+            validUntil
+          },
+          discountedPrice
+        } as Product);
       });
-    }
 
-    this.updateOrderSummary();
+      return products;
+    } catch (error) {
+      console.error('Error fetching products from Firestore:', error);
+      throw error;
+    }
   }
 
   openComboModal(): void {
     this.selectedPendants = [];
     this.selectedChain = null;
+    this.selectedChainType = '';
+    this.selectedChainSize = '';
+    this.selectedChainLayer = '';
     this.showAddComboModal = true;
   }
 
@@ -927,20 +208,42 @@ export class CreateOrderComponent implements OnInit {
     if (this.selectedChain && this.selectedChain._id === chain._id) {
       // If same chain is clicked again, deselect it
       this.selectedChain = null;
+      this.selectedChainType = '';
+      this.selectedChainSize = '';
+      this.selectedChainLayer = '';
     } else {
       this.selectedChain = chain;
+
+      // Set defaults if not already selected
+      if (!this.selectedChainType) {
+        this.selectedChainType = this.chainTypes[0];
+      }
+
+      if (!this.selectedChainSize) {
+        this.selectedChainSize = this.chainSizes[0];
+      }
+
+      if (!this.selectedChainLayer) {
+        this.selectedChainLayer = this.chainLayers[0];
+      }
     }
   }
 
   addComboToOrder(): void {
-    if (this.selectedPendants.length > 0 && this.selectedChain) {
+    if (this.selectedPendants.length > 0 && this.selectedChain && this.selectedChainType && this.selectedChainSize && this.selectedChainLayer) {
       // Calculate total pendant price
       const totalPendantPrice = this.selectedPendants.reduce((sum, pendant) => sum + pendant.price, 0);
       const comboPrice = this.selectedChain.price + totalPendantPrice;
 
-      // Create pendant names string
-      const pendantNames = this.selectedPendants.map(p => p.name).join(', ');
-      const comboName = `${this.selectedChain.name} with ${pendantNames}`;
+      // Create pendant names string - limit to first pendant name + count for better display
+      const pendantCount = this.selectedPendants.length;
+      const firstPendantName = this.selectedPendants[0].name;
+      const pendantNames = pendantCount === 1
+        ? firstPendantName
+        : `${firstPendantName} + ${pendantCount - 1} more`;
+
+      // Create a more concise name to avoid overflow
+      const comboName = `${this.selectedChainType} (${this.selectedChainSize}, ${this.selectedChainLayer} Layered): ${this.selectedChain.name} with ${pendantNames}`;
 
       // Choose an image (prefer the first pendant's image if available)
       const comboImage = this.selectedPendants[0]?.imageUrl || this.selectedChain.imageUrl;
@@ -951,7 +254,7 @@ export class CreateOrderComponent implements OnInit {
         name: comboName,
         category: 'combination',
         price: comboPrice,
-        description: `Combination of ${this.selectedChain.name} and ${pendantNames}`,
+        description: `Combination of ${this.selectedChainType} (${this.selectedChainSize}, ${this.selectedChainLayer} Layered): ${this.selectedChain.name} and ${this.selectedPendants.map(p => p.name).join(', ')}`,
         imageUrl: comboImage,
         productCode: `COMBO-${Date.now()}`,
         inStock: true,
@@ -976,7 +279,10 @@ export class CreateOrderComponent implements OnInit {
         quantity: 1,
         isCombo: true,
         pendantProducts: [...this.selectedPendants],
-        chainProduct: this.selectedChain
+        chainProduct: this.selectedChain,
+        chainType: this.selectedChainType,
+        chainSize: this.selectedChainSize,
+        chainLayer: this.selectedChainLayer
       });
 
       this.closeComboModal();
@@ -1054,12 +360,15 @@ export class CreateOrderComponent implements OnInit {
           }
         }
 
-        // Add the chain info
+        // Add the chain info with type and size
         if (item.chainProduct) {
           orderItem.combinationDetails.chainInfo = {
             id: item.chainProduct._id,
             name: item.chainProduct.name,
-            price: item.chainProduct.price
+            price: item.chainProduct.price,
+            type: item.chainType,
+            size: item.chainSize,
+            layer: item.chainLayer
           };
         }
       }

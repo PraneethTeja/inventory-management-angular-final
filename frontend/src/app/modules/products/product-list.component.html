@@ -88,35 +88,6 @@
               <i class="fas fa-eye"></i>
               View Details
             </button>
-
-            <!-- Cart button states -->
-            <ng-container *ngIf="product.inStock && getProductStock(product) > 0">
-              <ng-container *ngIf="!isInCart(product); else quantityControls">
-                <button (click)="addToCart(product)" class="btn-primary"
-                  [disabled]="!product.inStock || getProductStock(product) === 0">
-                  <i class="fas fa-shopping-cart"></i>
-                  Add to Cart
-                </button>
-              </ng-container>
-
-              <ng-template #quantityControls>
-                <div class="quantity-controls">
-                  <button (click)="decreaseQuantity(product)" class="qty-btn qty-minus">
-                    <i class="fas fa-minus"></i>
-                  </button>
-                  <span class="qty-value">{{ getCartItemQuantity(product) }}</span>
-                  <button (click)="increaseQuantity(product)" class="qty-btn qty-plus"
-                    [disabled]="getProductStock(product) === getCartItemQuantity(product)">
-                    <i class="fas fa-plus"></i>
-                  </button>
-                </div>
-              </ng-template>
-            </ng-container>
-
-            <button *ngIf="!product.inStock || getProductStock(product) === 0" class="btn-primary disabled" disabled>
-              <i class="fas fa-shopping-cart"></i>
-              Out of Stock
-            </button>
           </div>
         </div>
       </div>
@@ -189,36 +160,12 @@
             </p>
           </div>
 
-          <div class="modal-product-actions">
-            <ng-container *ngIf="selectedProduct && selectedProduct.inStock && getProductStock(selectedProduct) > 0">
-              <ng-container *ngIf="!isInCart(selectedProduct!); else modalQuantityControls">
-                <button (click)="addToCart(selectedProduct!)" class="btn-primary btn-modal-cart"
-                  [disabled]="!selectedProduct?.inStock || getProductStock(selectedProduct) === 0">
-                  <i class="fas fa-shopping-cart"></i>
-                  Add to Cart
-                </button>
-              </ng-container>
-
-              <ng-template #modalQuantityControls>
-                <div class="quantity-controls modal-quantity">
-                  <button (click)="decreaseQuantity(selectedProduct)" class="qty-btn qty-minus">
-                    <i class="fas fa-minus"></i>
-                  </button>
-                  <span class="qty-value">{{ getCartItemQuantity(selectedProduct) }}</span>
-                  <button (click)="increaseQuantity(selectedProduct)" class="qty-btn qty-plus"
-                    [disabled]="getProductStock(selectedProduct) === getCartItemQuantity(selectedProduct)">
-                    <i class="fas fa-plus"></i>
-                  </button>
-                </div>
-              </ng-template>
-            </ng-container>
-
-            <button *ngIf="!selectedProduct || !selectedProduct.inStock || getProductStock(selectedProduct) === 0"
-              class="btn-primary disabled btn-modal-cart" disabled>
-              <i class="fas fa-shopping-cart"></i>
-              Out of Stock
+          <!-- <div class="modal-product-actions">
+            <button (click)="closeProductModal($event)" class="btn-secondary">
+              <i class="fas fa-arrow-left"></i>
+              Back to Products
             </button>
-          </div>
+          </div> -->
 
           <div class="product-tags" *ngIf="selectedProduct.tags && selectedProduct.tags.length > 0">
             <span class="tag" *ngFor="let tag of selectedProduct.tags">{{ tag }}</span>

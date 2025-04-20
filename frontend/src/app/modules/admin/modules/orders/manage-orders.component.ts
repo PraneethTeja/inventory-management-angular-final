@@ -1,7 +1,21 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { OrderStatus, PaymentStatus } from '../../../../core/models/order.model';
+import { OrderStatus, PaymentStatus, Order, OrderResponse } from '../../../../core/models/order.model';
+import { OrderService } from '../../../../core/services/order.service';
+import {
+  collection,
+  query,
+  getDocs,
+  updateDoc,
+  doc,
+  orderBy,
+  where,
+  limit,
+  Timestamp,
+  QueryConstraint
+} from 'firebase/firestore';
+import { firestore } from '../../../../app.config';
 
 @Component({
   selector: 'app-manage-orders',
@@ -22,13 +36,14 @@ export class ManageOrdersComponent implements OnInit {
   // Pagination
   currentPage: number = 1;
   itemsPerPage: number = 10;
+  totalCount: number = 0;
 
   isLoading: boolean = false;
   error: string = '';
   success: string = '';
 
   // Ordering
-  sortBy: string = 'date';
+  sortBy: string = 'createdAt';
   sortDirection: 'asc' | 'desc' = 'desc';
 
   // Modal properties
@@ -40,9 +55,11 @@ export class ManageOrdersComponent implements OnInit {
   // Status and payment options
   statusOptions = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'canceled'];
   paymentStatusOptions = ['paid', 'pending', 'failed', 'refunded'];
-  paymentMethodOptions = ['cash', 'card', 'upi', 'bank_transfer'];
+  paymentMethodOptions = ['cash', 'credit_card', 'upi', 'bank_transfer'];
 
-  constructor() { }
+  private readonly COLLECTION_NAME = 'orders';
+
+  constructor(private orderService: OrderService) { }
 
   ngOnInit(): void {
     this.loadOrders();
@@ -50,84 +67,112 @@ export class ManageOrdersComponent implements OnInit {
 
   loadOrders(): void {
     this.isLoading = true;
+    this.error = '';
 
-    // In a real app, this would be a service call
-    setTimeout(() => {
-      this.orders = this.getMockOrders();
-      this.applyFilters();
-      this.isLoading = false;
-    }, 500);
+    this.fetchOrdersFromFirestore()
+      .then(ordersData => {
+        this.orders = ordersData.orders;
+        this.totalCount = ordersData.totalCount;
+        this.applyFilters();
+        this.isLoading = false;
+      })
+      .catch(error => {
+        console.error('Error loading orders:', error);
+        this.error = 'Failed to load orders. Please try again.';
+        this.orders = [];
+        this.applyFilters();
+        this.isLoading = false;
+      });
+  }
+
+  async fetchOrdersFromFirestore(): Promise<{ orders: any[], totalCount: number }> {
+    try {
+      const queryConstraints: QueryConstraint[] = [];
+
+      // Apply status filter to Firestore query
+      if (this.statusFilter !== 'all') {
+        queryConstraints.push(where('status', '==', this.statusFilter));
+      }
+
+      // Apply date filter to Firestore query
+      if (this.dateFilter !== 'all') {
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+        if (this.dateFilter === 'today') {
+          queryConstraints.push(where('createdAt', '>=', today));
+        } else if (this.dateFilter === 'week') {
+          const weekAgo = new Date(today);
+          weekAgo.setDate(weekAgo.getDate() - 7);
+          queryConstraints.push(where('createdAt', '>=', weekAgo));
+        } else if (this.dateFilter === 'month') {
+          const monthAgo = new Date(today);
+          monthAgo.setMonth(monthAgo.getMonth() - 1);
+          queryConstraints.push(where('createdAt', '>=', monthAgo));
+        }
+      }
+
+      // Add sorting
+      queryConstraints.push(orderBy(this.sortBy, this.sortDirection));
+
+      // First, get total count for pagination
+      const countQuery = query(
+        collection(firestore, this.COLLECTION_NAME),
+        ...queryConstraints
+      );
+
+      const countSnapshot = await getDocs(countQuery);
+      const totalCount = countSnapshot.size;
+
+      // Then get paginated data
+      const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+      const paginatedQuery = query(
+        collection(firestore, this.COLLECTION_NAME),
+        ...queryConstraints,
+        limit(this.itemsPerPage)
+      );
+
+      const querySnapshot = await getDocs(paginatedQuery);
+      const orders: any[] = [];
+
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+
+        // Convert Firestore timestamps to Date objects
+        const createdAt = data['createdAt']?.toDate ? data['createdAt'].toDate() : new Date(data['createdAt']);
+        const updatedAt = data['updatedAt']?.toDate ? data['updatedAt'].toDate() : new Date(data['updatedAt']);
+
+        orders.push({
+          id: doc.id,
+          ...data,
+          createdAt,
+          updatedAt,
+          date: createdAt // For backward compatibility with template
+        });
+      });
+
+      return { orders, totalCount };
+    } catch (error) {
+      console.error('Error fetching orders from Firestore:', error);
+      throw error;
+    }
   }
 
   applyFilters(): void {
+    // Client-side filtering is now minimized since we're doing most filtering in the Firestore query
+    // We mainly handle search here which is not easily done on Firestore
     let result = [...this.orders];
 
-    // Apply status filter
-    if (this.statusFilter !== 'all') {
-      result = result.filter(order => order.status.toLowerCase() === this.statusFilter);
-    }
-
-    // Apply date filter
-    if (this.dateFilter !== 'all') {
-      const now = new Date();
-      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-      if (this.dateFilter === 'today') {
-        result = result.filter(order => {
-          const orderDate = new Date(order.date);
-          return orderDate >= today;
-        });
-      } else if (this.dateFilter === 'week') {
-        const weekAgo = new Date(today);
-        weekAgo.setDate(weekAgo.getDate() - 7);
-
-        result = result.filter(order => {
-          const orderDate = new Date(order.date);
-          return orderDate >= weekAgo;
-        });
-      } else if (this.dateFilter === 'month') {
-        const monthAgo = new Date(today);
-        monthAgo.setMonth(monthAgo.getMonth() - 1);
-
-        result = result.filter(order => {
-          const orderDate = new Date(order.date);
-          return orderDate >= monthAgo;
-        });
-      }
-    }
-
-    // Apply search
+    // Apply search (client-side filter)
     if (this.searchTerm.trim() !== '') {
       const search = this.searchTerm.toLowerCase();
       result = result.filter(order =>
         order.id.toLowerCase().includes(search) ||
-        order.customer.name.toLowerCase().includes(search) ||
-        order.customer.email.toLowerCase().includes(search) ||
-        order.customer.phone.toLowerCase().includes(search)
+        (order.customer?.name && order.customer.name.toLowerCase().includes(search)) ||
+        (order.customer?.email && order.customer.email.toLowerCase().includes(search)) ||
+        (order.customer?.phone && order.customer.phone.toLowerCase().includes(search))
       );
     }
-
-    // Apply sorting
-    result.sort((a, b) => {
-      let valueA, valueB;
-
-      if (this.sortBy === 'date') {
-        valueA = new Date(a.date).getTime();
-        valueB = new Date(b.date).getTime();
-      } else if (this.sortBy === 'totalAmount') {
-        valueA = a.totalAmount;
-        valueB = b.totalAmount;
-      } else if (this.sortBy === 'id') {
-        valueA = a.id;
-        valueB = b.id;
-      } else {
-        valueA = a[this.sortBy];
-        valueB = b[this.sortBy];
-      }
-
-      const compareResult = valueA > valueB ? 1 : valueA < valueB ? -1 : 0;
-      return this.sortDirection === 'asc' ? compareResult : -compareResult;
-    });
 
     this.filteredOrders = result;
   }
@@ -140,21 +185,23 @@ export class ManageOrdersComponent implements OnInit {
       this.sortBy = sortBy;
       this.sortDirection = 'desc'; // Default to descending for new sort column
     }
-    this.applyFilters();
+
+    // Reload orders from Firestore with new sorting
+    this.loadOrders();
   }
 
   get paginatedOrders(): any[] {
-    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
-    return this.filteredOrders.slice(startIndex, startIndex + this.itemsPerPage);
+    return this.filteredOrders;
   }
 
   get totalPages(): number {
-    return Math.ceil(this.filteredOrders.length / this.itemsPerPage);
+    return Math.ceil(this.totalCount / this.itemsPerPage);
   }
 
   changePage(page: number): void {
     if (page >= 1 && page <= this.totalPages) {
       this.currentPage = page;
+      this.loadOrders(); // Reload with new page
     }
   }
 
@@ -187,18 +234,36 @@ export class ManageOrdersComponent implements OnInit {
     this.editedOrder = null;
   }
 
-  saveOrderChanges(): void {
-    // In a real app, this would be a service call to update the order in the backend
-    const index = this.orders.findIndex(order => order.id === this.editedOrder.id);
-    if (index !== -1) {
-      this.orders[index] = this.editedOrder;
-      this.applyFilters();
+  async saveOrderChanges(): Promise<void> {
+    try {
+      this.isLoading = true;
+
+      // Update Firestore document
+      const orderRef = doc(firestore, this.COLLECTION_NAME, this.editedOrder.id);
+
+      // Prepare data for update, omitting id field which is not stored in document
+      const { id, ...updateData } = this.editedOrder;
+
+      // Ensure updatedAt is set
+      updateData.updatedAt = new Date();
+
+      await updateDoc(orderRef, updateData);
+
+      // Reload orders to reflect changes
+      await this.loadOrders();
+
       this.success = `Order ${this.editedOrder.id} has been updated successfully!`;
       setTimeout(() => {
         this.success = '';
       }, 3000);
+
+      this.closeEditModal();
+      this.isLoading = false;
+    } catch (error) {
+      console.error('Error updating order:', error);
+      this.error = 'Failed to update order. Please try again.';
+      this.isLoading = false;
     }
-    this.closeEditModal();
   }
 
   // WhatsApp Functions
@@ -213,47 +278,6 @@ export class ManageOrdersComponent implements OnInit {
     return order.items.reduce((total: number, item: any) => {
       return total + (item.price * item.quantity);
     }, 0);
-  }
-
-  // Mock data for development
-  getMockOrders(): any[] {
-    const statuses = ['Pending', 'Confirmed', 'Processing', 'Shipped', 'Delivered', 'Canceled'];
-    const paymentMethods = ['Cash', 'Card', 'UPI', 'Bank Transfer'];
-    const paymentStatuses = ['Paid', 'Pending', 'Failed', 'Refunded'];
-
-    return Array.from({ length: 50 }, (_, i) => {
-      const orderDate = new Date();
-      orderDate.setDate(orderDate.getDate() - Math.floor(Math.random() * 60)); // Random date within last 60 days
-
-      const orderItems = Array.from({ length: Math.floor(Math.random() * 5) + 1 }, (_, j) => ({
-        product: `PROD-${Math.floor(Math.random() * 1000)}`,
-        name: `Product ${j + 1}`,
-        quantity: Math.floor(Math.random() * 5) + 1,
-        price: Math.floor(Math.random() * 5000) + 500,
-        category: Math.random() > 0.5 ? 'pendant' : 'chain'
-      }));
-
-      const subtotal = orderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-      const tax = subtotal * 0.18;
-      const totalAmount = subtotal + tax;
-
-      return {
-        id: `ORD-${1000 + i}`,
-        customer: {
-          name: `Customer ${i + 1}`,
-          email: `customer${i + 1}@example.com`,
-          phone: `98765${43210 + i}`
-        },
-        items: orderItems,
-        date: orderDate.toISOString(),
-        status: statuses[Math.floor(Math.random() * statuses.length)],
-        subtotal,
-        tax,
-        totalAmount,
-        paymentMethod: paymentMethods[Math.floor(Math.random() * paymentMethods.length)],
-        paymentStatus: paymentStatuses[Math.floor(Math.random() * paymentStatuses.length)]
-      };
-    });
   }
 
   getStatusClass(status: string): string {

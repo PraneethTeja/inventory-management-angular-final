@@ -1,0 +1,290 @@
+<div class="combination-container">
+  <!-- Navbar Component -->
+  <app-navbar [activePage]="'create-combination'" [cartItemCount]="cartItemCount"></app-navbar>
+
+  <!-- Hero section -->
+  <div class="hero-section">
+    <div class="container">
+      <div class="row align-items-center">
+        <div class="col-lg-8 mx-auto text-center py-5">
+          <h1 class="display-4 fw-bold mb-3">Create Your Custom Jewelry</h1>
+          <p class="lead mb-4">Mix and match chains and pendants to create your own unique combination</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container my-5">
+    <!-- Loading and error messages -->
+    <div *ngIf="isLoading" class="d-flex justify-content-center my-5">
+      <div class="spinner-grow text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+
+    <div *ngIf="error" class="alert alert-danger shadow-sm">
+      <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ error }}
+    </div>
+
+    <div *ngIf="success" class="alert alert-success shadow-sm">
+      <i class="bi bi-check-circle-fill me-2"></i> {{ success }}
+    </div>
+
+    <!-- Main content -->
+    <div *ngIf="!isLoading && !error" class="combination-content">
+      <!-- How it works section - Horizontal layout -->
+      <div class="how-it-works-container mb-5">
+        <h2 class="section-title text-center">How It Works</h2>
+        <div class="how-it-works-steps">
+          <div class="step-item">
+            <div class="circle-step">1</div>
+            <div class="step-content">
+              <h4>Choose Your Chain</h4>
+              <p>Select a chain, bracelet, or anklet as your base</p>
+            </div>
+          </div>
+          <div class="step-connector"></div>
+          <div class="step-item">
+            <div class="circle-step">2</div>
+            <div class="step-content">
+              <h4>Add Pendants</h4>
+              <p>Choose one or more pendants to add to your chain</p>
+            </div>
+          </div>
+          <div class="step-connector"></div>
+          <div class="step-item">
+            <div class="circle-step">3</div>
+            <div class="step-content">
+              <h4>Review & Add to Cart</h4>
+              <p>Preview your combination and add it to your cart</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row gx-4 gy-5">
+        <!-- Left column - Chain selection -->
+        <div class="col-lg-6">
+          <div class="selection-card">
+            <div class="selection-card-header">
+              <h3><i class="bi bi-link me-2"></i>Step 1: Choose Your Chain</h3>
+            </div>
+            <div class="selection-card-body">
+              <!-- Chain search -->
+              <div class="search-container mb-4">
+                <div class="search-box">
+                  <div class="input-group">
+                    <span class="input-group-text bg-transparent border-end-0"><i class="bi bi-search"></i></span>
+                    <input type="text" class="form-control border-start-0" placeholder="Search chains..."
+                      [(ngModel)]="chainSearchTerm" (keyup)="filterChains()">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Chain type selection -->
+              <div class="mb-4">
+                <label class="form-label fw-bold">Chain Type:</label>
+                <div class="chain-type-buttons">
+                  <button *ngFor="let type of chainTypes" [class.active]="selectedChainType === type" class="btn-type"
+                    (click)="selectedChainType = type">
+                    {{type}}
+                  </button>
+                </div>
+              </div>
+
+              <!-- Chain size selection -->
+              <div class="mb-4">
+                <label class="form-label fw-bold">Chain Size:</label>
+                <div class="chain-size-buttons">
+                  <button *ngFor="let size of chainSizes" [class.active]="selectedChainSize === size" class="btn-size"
+                    (click)="selectedChainSize = size">
+                    {{size}}
+                  </button>
+                </div>
+              </div>
+
+              <!-- Chain layer selection -->
+              <div class="mb-4">
+                <label class="form-label fw-bold">Chain Layer:</label>
+                <div class="chain-layer-buttons">
+                  <button *ngFor="let layer of chainLayers" [class.active]="selectedChainLayer === layer"
+                    class="btn-layer" (click)="selectedChainLayer = layer">
+                    {{layer}}
+                  </button>
+                </div>
+              </div>
+
+              <!-- Chain list -->
+              <div class="chain-grid">
+                <div *ngFor="let chain of filteredChains" class="chain-item"
+                  [class.selected]="selectedChain?._id === chain._id" (click)="selectChain(chain)">
+                  <div class="product-image">
+                    <img [src]="chain.imageUrl" alt="{{chain.name}}">
+                    <div *ngIf="chain.discount && chain.discount.percentage > 0" class="discount-badge">
+                      {{chain.discount.percentage}}% OFF
+                    </div>
+                  </div>
+                  <div class="product-info">
+                    <h5 class="product-name">{{chain.name}}</h5>
+                    <div class="price-area">
+                      <span class="current-price">{{chain.price | currency}}</span>
+                      <span *ngIf="chain.discount && chain.discount.percentage > 0" class="original-price">
+                        {{chain.price | currency}}
+                      </span>
+                    </div>
+                  </div>
+                  <div class="selection-indicator">
+                    <i class="bi bi-check-circle-fill"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right column - Pendant selection -->
+        <div class="col-lg-6">
+          <div class="selection-card">
+            <div class="selection-card-header">
+              <h3><i class="bi bi-gem me-2"></i>Step 2: Choose Your Pendants</h3>
+            </div>
+            <div class="selection-card-body">
+              <!-- Pendant search -->
+              <div class="search-container mb-4">
+                <div class="search-box">
+                  <div class="input-group">
+                    <span class="input-group-text bg-transparent border-end-0"><i class="bi bi-search"></i></span>
+                    <input type="text" class="form-control border-start-0" placeholder="Search pendants..."
+                      [(ngModel)]="pendantSearchTerm" (keyup)="filterPendants()">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Selected pendants summary -->
+              <div *ngIf="selectedPendants.length > 0" class="selected-items mb-4">
+                <div class="selected-items-header">
+                  <span class="selected-count">Selected pendants: {{selectedPendants.length}}</span>
+                </div>
+                <div class="selected-items-tags">
+                  <div *ngFor="let pendant of selectedPendants" class="selected-tag">
+                    <span>{{pendant.name}}</span>
+                    <button type="button" class="btn-remove" (click)="selectPendant(pendant)">×</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Pendant list -->
+              <div class="pendant-grid">
+                <div *ngFor="let pendant of filteredPendants" class="pendant-item"
+                  [class.selected]="isPendantSelected(pendant)" (click)="selectPendant(pendant)">
+                  <div class="product-image">
+                    <img [src]="pendant.imageUrl" alt="{{pendant.name}}">
+                    <div *ngIf="pendant.discount && pendant.discount.percentage > 0" class="discount-badge">
+                      {{pendant.discount.percentage}}% OFF
+                    </div>
+                  </div>
+                  <div class="product-info">
+                    <h5 class="product-name">{{pendant.name}}</h5>
+                    <div class="price-area">
+                      <span class="current-price">{{pendant.price | currency}}</span>
+                      <span *ngIf="pendant.discount && pendant.discount.percentage > 0" class="original-price">
+                        {{pendant.price | currency}}
+                      </span>
+                    </div>
+                  </div>
+                  <div class="selection-indicator">
+                    <i class="bi bi-check-circle-fill"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Summary and Add to Cart -->
+      <div class="row mt-5">
+        <div class="col-lg-10 offset-lg-1">
+          <div class="summary-card">
+            <div class="summary-card-header">
+              <h3><i class="bi bi-stars me-2"></i>Your Custom Combination</h3>
+            </div>
+            <div class="summary-card-body">
+              <div class="row">
+                <div class="col-md-6">
+                  <h4 class="summary-section-title">Selected Items</h4>
+                  <div class="selected-items-list">
+                    <div *ngIf="selectedChain" class="selected-item">
+                      <div class="selected-item-image">
+                        <img [src]="selectedChain.imageUrl" alt="{{selectedChain.name}}">
+                      </div>
+                      <div class="selected-item-details">
+                        <h5>{{selectedChain.name}}</h5>
+                        <p class="selected-item-type">
+                          {{selectedChainType}} ({{selectedChainSize}})
+                          <span *ngIf="selectedChainLayer"> - {{selectedChainLayer}} Layered</span>
+                        </p>
+                        <p class="selected-item-price">{{selectedChain.price | currency}}</p>
+                      </div>
+                    </div>
+
+                    <div *ngIf="!selectedChain" class="empty-selection">
+                      <i class="bi bi-link-45deg"></i>
+                      <p>No chain selected</p>
+                    </div>
+
+                    <div class="selected-items-divider">
+                      <span>Pendants</span>
+                    </div>
+
+                    <div *ngIf="selectedPendants.length > 0" class="selected-pendants">
+                      <div *ngFor="let pendant of selectedPendants" class="selected-item">
+                        <div class="selected-item-image">
+                          <img [src]="pendant.imageUrl" alt="{{pendant.name}}">
+                        </div>
+                        <div class="selected-item-details">
+                          <h5>{{pendant.name}}</h5>
+                          <p class="selected-item-price">{{pendant.price | currency}}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div *ngIf="selectedPendants.length === 0" class="empty-selection">
+                      <i class="bi bi-gem"></i>
+                      <p>No pendants selected</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <h4 class="summary-section-title">Price Summary</h4>
+                  <div class="price-summary">
+                    <div class="price-row">
+                      <span>Chain Price</span>
+                      <span>{{(selectedChain?.price || 0) | currency}}</span>
+                    </div>
+                    <div class="price-row">
+                      <span>Pendants ({{selectedPendants.length}} item<span
+                          *ngIf="selectedPendants.length !== 1">s</span>)</span>
+                      <span>{{getTotalPendantPrice() | currency}}</span>
+                    </div>
+                    <div class="price-row total">
+                      <span>Total</span>
+                      <span>{{getTotalPrice() | currency}}</span>
+                    </div>
+                  </div>
+
+                  <button class="add-to-cart-btn"
+                    [disabled]="selectedPendants.length === 0 || !selectedChain || !selectedChainType || !selectedChainSize"
+                    (click)="addToCart()">
+                    <i class="bi bi-cart-plus me-2"></i> Add Combination to Cart
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

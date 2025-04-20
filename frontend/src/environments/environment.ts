@@ -2,12 +2,12 @@ export const environment = {
   production: false,
   apiUrl: 'http://localhost:5000/api',
   firebase: {
-    apiKey: "AIzaSyC_d5s40DO-rrr2l-1TzfPkli0NRSLZo_U",
-    authDomain: "inventory-management-24268.firebaseapp.com",
-    projectId: "inventory-management-24268",
-    storageBucket: "inventory-management-24268.firebasestorage.app",
-    messagingSenderId: "750453927235",
-    appId: "1:750453927235:web:90e7d559ff82f0ce50d3f6",
-    measurementId: "G-XWMXT78PSJ"
+    apiKey: "YOUR_API_KEY_HERE",
+    authDomain: "YOUR_AUTH_DOMAIN_HERE",
+    projectId: "YOUR_PROJECT_ID_HERE",
+    storageBucket: "YOUR_STORAGE_BUCKET_HERE",
+    messagingSenderId: "YOUR_MESSAGING_SENDER_ID_HERE",
+    appId: "YOUR_APP_ID_HERE",
+    measurementId: "YOUR_MEASUREMENT_ID_HERE"
   }
 }; 

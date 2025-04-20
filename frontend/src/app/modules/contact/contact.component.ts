@@ -1,7 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavbarComponent } from '../../shared/components/navbar/navbar.component';
+import { SimpleCartService } from '../../core/services/simple-cart.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-contact',
@@ -10,12 +12,16 @@ import { NavbarComponent } from '../../shared/components/navbar/navbar.component
   templateUrl: './contact.component.html',
   styleUrls: ['./contact.component.scss']
 })
-export class ContactComponent {
+export class ContactComponent implements OnInit, OnDestroy {
   contactForm: FormGroup;
   cartItemCount = 0;
   messageSent = false;
+  private subscription = new Subscription();
 
-  constructor(private fb: FormBuilder) {
+  constructor(
+    private fb: FormBuilder,
+    private cartService: SimpleCartService
+  ) {
     this.contactForm = this.fb.group({
       name: ['', [Validators.required]],
       email: ['', [Validators.required, Validators.email]],
@@ -23,6 +29,19 @@ export class ContactComponent {
       subject: ['', [Validators.required]],
       message: ['', [Validators.required, Validators.minLength(20)]]
     });
+  }
+
+  ngOnInit(): void {
+    // Get cart count from service
+    this.subscription.add(
+      this.cartService.getCartCount().subscribe(count => {
+        this.cartItemCount = count;
+      })
+    );
+  }
+
+  ngOnDestroy(): void {
+    this.subscription.unsubscribe();
   }
 
   submitForm(): void {

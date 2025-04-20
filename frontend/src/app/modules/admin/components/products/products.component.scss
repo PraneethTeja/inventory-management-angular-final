@@ -14,7 +14,7 @@
     margin: 0;
     font-size: 1.8rem;
     font-weight: 500;
-    color: #1a237e;
+    color: #212121;
   }
 }
 
@@ -24,12 +24,12 @@
   background: white;
   padding: 16px 20px;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
   
   .filter-label {
     margin-bottom: 12px;
     font-weight: 500;
-    color: #555;
+    color: #757575;
   }
   
   .category-buttons {
@@ -51,7 +51,7 @@
       }
       
       &.active {
-        background: #1a237e;
+        background: #212121;
         color: white;
       }
     }
@@ -62,7 +62,7 @@
 .add-product-btn {
   display: flex;
   align-items: center;
-  background: #1a237e;
+  background: #212121;
   color: white;
   border: none;
   padding: 10px 20px;
@@ -77,14 +77,14 @@
   }
   
   &:hover {
-    background: #3949ab;
+    background: #484848;
   }
 }
 
 // Error Message
 .error-message {
   background: #ffebee;
-  color: #d32f2f;
+  color: #e53935;
   padding: 12px 16px;
   border-radius: 4px;
   margin-bottom: 20px;
@@ -101,15 +101,15 @@
   .spinner {
     width: 40px;
     height: 40px;
-    border: 3px solid rgba(26, 35, 126, 0.2);
-    border-top-color: #1a237e;
+    border: 3px solid rgba(33, 33, 33, 0.2);
+    border-top-color: #212121;
     border-radius: 50%;
     animation: spin 1s infinite linear;
     margin-bottom: 16px;
   }
   
   p {
-    color: #555;
+    color: #757575;
   }
 }
 
@@ -128,7 +128,7 @@
 .product-card {
   background: white;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
   overflow: hidden;
   transition: transform 0.2s, box-shadow 0.2s;
   
@@ -153,7 +153,7 @@
       position: absolute;
       top: 10px;
       left: 10px;
-      background: #f44336;
+      background: #e53935;
       color: white;
       padding: 5px 10px;
       border-radius: 20px;
@@ -165,7 +165,7 @@
       position: absolute;
       top: 10px;
       right: 10px;
-      background: #4caf50;
+      background: #43a047;
       color: white;
       padding: 5px 10px;
       border-radius: 20px;
@@ -173,20 +173,20 @@
       font-weight: 500;
       
       &.out-of-stock {
-        background: #9e9e9e;
+        background: #757575;
       }
     }
   }
   
   .product-info {
     padding: 16px;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid #e0e0e0;
     
     h3 {
       margin: 0 0 8px 0;
       font-size: 16px;
       font-weight: 500;
-      color: #333;
+      color: #212121;
       line-height: 1.3;
     }
     
@@ -197,7 +197,7 @@
       font-size: 13px;
       
       .category {
-        color: #1a237e;
+        color: #212121;
       }
       
       .code {
@@ -211,11 +211,11 @@
       .price {
         font-size: 18px;
         font-weight: 600;
-        color: #333;
+        color: #212121;
         
         &.has-discount {
           text-decoration: line-through;
-          color: #9e9e9e;
+          color: #757575;
           font-size: 16px;
           margin-right: 8px;
         }
@@ -224,7 +224,7 @@
       .discounted-price {
         font-size: 18px;
         font-weight: 600;
-        color: #f44336;
+        color: #e53935;
       }
     }
     
@@ -239,8 +239,8 @@
       }
       
       .featured-badge {
-        background: #ffc107;
-        color: #333;
+        background: #fb8c00;
+        color: white;
         padding: 3px 8px;
         border-radius: 4px;
         font-weight: 500;
@@ -272,17 +272,17 @@
     }
     
     .edit-btn {
-      background: #e3f2fd;
-      color: #1976d2;
+      background: #f5f5f5;
+      color: #212121;
       
       &:hover {
-        background: #bbdefb;
+        background: #e0e0e0;
       }
     }
     
     .delete-btn {
       background: #ffebee;
-      color: #d32f2f;
+      color: #e53935;
       
       &:hover {
         background: #ffcdd2;
@@ -293,31 +293,22 @@
 
 // Empty State
 .empty-state {
-  background: white;
-  padding: 40px 20px;
+  background-color: #f5f5f5;
+  padding: 40px;
   border-radius: 8px;
   text-align: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  margin: 20px 0;
   
-  .empty-icon {
+  i {
     font-size: 48px;
-    color: #bdbdbd;
+    color: #757575;
     margin-bottom: 16px;
-    
-    i {
-      font-size: 64px;
-    }
-  }
-  
-  h3 {
-    font-size: 20px;
-    margin: 0 0 12px 0;
-    color: #333;
   }
   
   p {
-    color: #757575;
-    margin: 0 0 24px 0;
+    color: #212121;
+    font-size: 16px;
+    margin: 0;
   }
 }
 
@@ -433,7 +424,7 @@
     height: 0;
     
     &:checked + .toggle-label {
-      background-color: #1a237e;
+      background-color: #212121;
       
       &:before {
         transform: translateX(22px);
@@ -441,7 +432,7 @@
     }
     
     &:focus + .toggle-label {
-      box-shadow: 0 0 1px #1a237e;
+      box-shadow: 0 0 1px #212121;
     }
   }
   
@@ -452,7 +443,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: #ccc;
+    background-color: #bdbdbd;
     transition: .4s;
     border-radius: 24px;
     
@@ -492,7 +483,7 @@
   
   .cancel-btn {
     background: #f5f5f5;
-    color: #333;
+    color: #212121;
     
     &:hover {
       background: #e0e0e0;
@@ -500,11 +491,11 @@
   }
   
   .submit-btn {
-    background: #1a237e;
+    background: #212121;
     color: white;
     
     &:hover {
-      background: #3949ab;
+      background: #484848;
     }
   }
 }
@@ -527,11 +518,11 @@
   h1 {
     margin: 0;
     font-size: 1.8rem;
-    color: #333;
+    color: #212121;
   }
   
   .add-product-btn {
-    background: #7f2257;
+    background: #212121;
     color: white;
     border: none;
     padding: 10px 15px;
@@ -544,7 +535,7 @@
     transition: all 0.2s;
     
     &:hover {
-      background: darken(#7f2257, 10%);
+      background: #484848;
     }
     
     i {
@@ -576,8 +567,8 @@
 
       &:focus {
         outline: none;
-        border-color: #7f2257;
-        box-shadow: 0 0 0 2px rgba(127, 34, 87, 0.1);
+        border-color: #212121;
+        box-shadow: 0 0 0 2px rgba(33, 33, 33, 0.1);
       }
     }
 
@@ -607,7 +598,7 @@
       
       &:focus {
         outline: none;
-        border-color: #7f2257;
+        border-color: #212121;
       }
     }
   }
@@ -623,7 +614,7 @@
     background: white;
     border-radius: 8px;
     overflow: hidden;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
     transition: all 0.3s;
     
     &:hover {
@@ -644,21 +635,21 @@
       .product-name {
         margin: 0 0 5px 0;
         font-size: 1.1rem;
-        color: #333;
+        color: #212121;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
       }
       
       .product-category {
-        color: #777;
+        color: #757575;
         font-size: 0.9rem;
         margin-bottom: 10px;
       }
       
       .product-price {
         font-weight: 600;
-        color: #7f2257;
+        color: #212121;
         font-size: 1.1rem;
         margin-bottom: 10px;
       }
@@ -668,15 +659,15 @@
         margin-bottom: 15px;
         
         &.in-stock {
-          color: #4caf50;
+          color: #43a047;
         }
         
         &.low-stock {
-          color: #ff9800;
+          color: #fb8c00;
         }
         
         &.out-of-stock {
-          color: #f44336;
+          color: #e53935;
         }
       }
       
@@ -698,22 +689,22 @@
           gap: 5px;
           
           &.edit-btn {
-            background: rgba(195, 153, 107, 0.1);
-            color: #c3996b;
-            border: 1px solid rgba(195, 153, 107, 0.2);
+            background: rgba(33, 33, 33, 0.1);
+            color: #212121;
+            border: 1px solid rgba(33, 33, 33, 0.2);
             
             &:hover {
-              background: rgba(195, 153, 107, 0.2);
+              background: rgba(33, 33, 33, 0.2);
             }
           }
           
           &.delete-btn {
-            background: rgba(244, 67, 54, 0.1);
-            color: #f44336;
-            border: 1px solid rgba(244, 67, 54, 0.2);
+            background: rgba(229, 57, 53, 0.1);
+            color: #e53935;
+            border: 1px solid rgba(229, 57, 53, 0.2);
             
             &:hover {
-              background: rgba(244, 67, 54, 0.2);
+              background: rgba(229, 57, 53, 0.2);
             }
           }
         }
@@ -735,7 +726,7 @@
     padding: 8px 12px;
     cursor: pointer;
     transition: all 0.2s;
-    color: #555;
+    color: #757575;
 
     &:hover:not(:disabled) {
       background: #f5f5f5;
@@ -747,9 +738,9 @@
     }
 
     &.active {
-      background: #7f2257;
+      background: #212121;
       color: white;
-      border-color: #7f2257;
+      border-color: #212121;
     }
   }
 }
@@ -771,7 +762,7 @@
     h2 {
       margin: 0;
       font-size: 1.5rem;
-      color: #333;
+      color: #212121;
     }
     
     .close-btn {
@@ -779,7 +770,7 @@
       border: none;
       font-size: 1.2rem;
       cursor: pointer;
-      color: #777;
+      color: #757575;
       width: 30px;
       height: 30px;
       display: flex;
@@ -790,7 +781,7 @@
       
       &:hover {
         background: #f0f0f0;
-        color: #333;
+        color: #212121;
       }
     }
   }
@@ -811,7 +802,7 @@
         display: block;
         margin-bottom: 5px;
         font-size: 0.9rem;
-        color: #555;
+        color: #757575;
         font-weight: 500;
       }
       
@@ -825,8 +816,8 @@
         
         &:focus {
           outline: none;
-          border-color: #7f2257;
-          box-shadow: 0 0 0 2px rgba(127, 34, 87, 0.1);
+          border-color: #212121;
+          box-shadow: 0 0 0 2px rgba(33, 33, 33, 0.1);
         }
       }
       
@@ -983,16 +974,16 @@
   width: 100%;
   padding: 0.75rem 1rem;
   padding-right: 80px;
-  border: 1px solid #ddd;
+  border: 1px solid #e0e0e0;
   border-radius: 4px;
   font-size: 0.9rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
   transition: all 0.3s;
 }
 
 .search-input-container input:focus {
-  border-color: #6b46c1;
-  box-shadow: 0 2px 8px rgba(107, 70, 193, 0.2);
+  border-color: #212121;
+  box-shadow: 0 2px 8px rgba(33, 33, 33, 0.2);
   outline: none;
 }
 
@@ -1008,7 +999,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #666;
+  color: #757575;
   transition: color 0.3s;
 }
 
@@ -1021,5 +1012,5 @@
 }
 
 .search-button:hover, .clear-button:hover {
-  color: #6b46c1;
+  color: #212121;
 } 

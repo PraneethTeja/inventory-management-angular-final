@@ -1,5 +1,6 @@
 /* You can add global styles to this file, and also import other style files */
 @import '@angular/material/prebuilt-themes/indigo-pink.css';
+@import './app/styles/variables.scss';
 
 * {
   margin: 0;
@@ -20,10 +21,11 @@ html, body {
 }
 
 body {
-  font-family: 'DM Sans', sans-serif;
-  color: #333;
-  background-color: #fff;
-  line-height: 1.6;
+  font-family: $font-family-base;
+  font-size: $font-size-base;
+  line-height: 1.5;
+  color: $text-dark;
+  background-color: $background-light;
 }
 
 app-root {
@@ -41,28 +43,36 @@ app-root {
   --light-text: #fff;
   --border-color: #ddd;
   --background-color: #f8f8f8;
-  --card-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  --border-radius: 12px;
+  --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --border-radius: 8px;
   --button-radius: 8px;
-  --spacing-xs: 4px;
-  --spacing-sm: 8px;
-  --spacing-md: 16px;
-  --spacing-lg: 24px;
-  --spacing-xl: 32px;
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
   
   /* Admin theme colors */
-  --admin-primary: #1a237e;
-  --admin-secondary: #3949ab;
-  --admin-accent: #f50057;
+  --admin-primary: #212121;
+  --admin-primary-dark: #000000;
+  --admin-primary-light: #484848;
+  --admin-accent: #757575;
+  --admin-accent-light: #a4a4a4;
+  --admin-accent-dark: #494949;
   --admin-background: #f5f5f5;
   --admin-card-bg: #ffffff;
-  --admin-text: #333333;
+  --admin-surface: #ffffff;
+  --admin-text-primary: #212121;
+  --admin-text-secondary: #757575;
+  --admin-text-light: #ffffff;
+  --admin-divider: #e0e0e0;
+  --admin-border: #e0e0e0;
   --admin-sidebar-width: 280px;
 
   // Color Palette
   --primary: #7f2257;
-  --primary-dark: #661a45;
-  --primary-light: #9a3a6e;
+  --primary-dark: #661c46;
+  --primary-light: #a64278;
   
   --accent: #c3996b;
   --accent-dark: #a37e54;
@@ -87,7 +97,7 @@ app-root {
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 15px;
+  padding: 0 $spacing-lg;
 }
 
 .section {
@@ -95,14 +105,16 @@ app-root {
 }
 
 .card {
-  background: white;
-  border-radius: var(--border-radius);
-  box-shadow: var(--card-shadow);
+  background-color: $background-light;
+  border-radius: $border-radius-large;
+  box-shadow: $shadow-light;
   overflow: hidden;
+  transition: transform $transition-speed $transition-function, 
+              box-shadow $transition-speed $transition-function;
 }
 
 .btn {
-  border-radius: var(--button-radius);
+  border-radius: var(--border-radius);
   padding: var(--spacing-sm) var(--spacing-md);
   cursor: pointer;
   font-weight: 500;
@@ -286,17 +298,19 @@ input, select, textarea,
     --admin-sidebar-width: 240px;
   }
   
-  .admin-layout {
+  .admin-layout-container {
     flex-direction: column;
   }
   
   .sidebar {
     width: 100% !important;
     height: auto;
+    position: relative !important;
   }
   
   .content {
     margin-left: 0 !important;
+    width: 100% !important;
   }
 }
 
@@ -313,22 +327,20 @@ input, select, textarea,
 
 /* Global button styles */
 .btn-primary {
-  background-color: var(--primary);
+  display: inline-block;
+  padding: $spacing-md $spacing-xl;
+  background-color: $primary-color;
   color: white;
   border: none;
-  padding: 10px 20px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.3s ease;
+  border-radius: $border-radius-medium;
   font-weight: 500;
+  text-align: center;
+  cursor: pointer;
+  transition: background-color $transition-speed $transition-function;
+  text-decoration: none;
   
   &:hover {
-    background-color: var(--primary-dark);
-  }
-  
-  &:disabled {
-    background-color: var(--text-light);
-    cursor: not-allowed;
+    background-color: $primary-dark;
   }
 }
 
@@ -348,18 +360,37 @@ input, select, textarea,
 }
 
 .btn-outline {
+  display: inline-block;
+  padding: $spacing-sm $spacing-lg;
   background-color: transparent;
-  color: var(--primary);
-  border: 1px solid var(--primary);
-  padding: 9px 19px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-weight: 500;
+  color: $text-dark;
+  border: 1px solid $text-dark;
+  border-radius: $border-radius-medium;
+  font-weight: 600;
+  font-size: $font-size-sm;
+  letter-spacing: 0.5px;
+  transition: all $transition-speed $transition-function;
+  text-decoration: none;
+  text-align: center;
   
   &:hover {
-    background-color: var(--primary);
+    background-color: $text-dark;
     color: white;
+  }
+}
+
+.btn-view {
+  display: inline-block;
+  padding: $spacing-sm $spacing-lg;
+  background-color: $text-dark;
+  color: white;
+  border-radius: $border-radius-medium;
+  text-decoration: none;
+  text-align: center;
+  transition: all $transition-speed $transition-function;
+  
+  &:hover {
+    background-color: #555;
   }
 }
 
@@ -588,4 +619,50 @@ input, select, textarea {
   .jewelry-navbar .login-btn {
     width: 100% !important;
   }
+}
+
+/* Button styles */
+.btn-secondary {
+  display: inline-block;
+  padding: $spacing-md $spacing-xl;
+  background-color: white;
+  color: $text-dark;
+  border: 1px solid $border-color;
+  border-radius: $border-radius-medium;
+  font-weight: 500;
+  text-align: center;
+  cursor: pointer;
+  transition: all $transition-speed $transition-function;
+  text-decoration: none;
+  
+  &:hover {
+    background-color: $background-gray;
+  }
+}
+
+/* Badge styles */
+.badge {
+  display: inline-block;
+  padding: $spacing-xs $spacing-sm;
+  border-radius: $border-radius-small;
+  font-size: $font-size-sm;
+  font-weight: 600;
+}
+
+.badge-primary {
+  background-color: $primary-color;
+  color: white;
+}
+
+.badge-accent {
+  background-color: $accent-color;
+  color: white;
+}
+
+/* Section title */
+.section-title {
+  font-size: $font-size-xl;
+  text-align: center;
+  margin-bottom: $spacing-xl;
+  font-weight: 600;
 }

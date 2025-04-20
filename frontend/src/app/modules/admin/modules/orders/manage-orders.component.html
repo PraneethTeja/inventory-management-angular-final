@@ -125,17 +125,48 @@
   </div>
 
   <div class="pagination" *ngIf="!isLoading && totalPages > 1">
-    <button [disabled]="currentPage === 1" (click)="changePage(currentPage - 1)">
+    <button class="prev-btn" [disabled]="currentPage === 1" (click)="changePage(currentPage - 1)" title="Previous Page">
       <i class="material-icons">chevron_left</i>
     </button>
 
-    <div class="page-numbers">
-      <button *ngFor="let page of getPageNumbers()" [class.active]="page === currentPage" (click)="changePage(page)">
-        {{ page }}
-      </button>
+    <div class="page-info" *ngIf="filteredOrders.length > 0">
+      Showing page {{ currentPage }} of {{ totalPages }}
     </div>
 
-    <button [disabled]="currentPage === totalPages" (click)="changePage(currentPage + 1)">
+    <div class="page-numbers">
+      <ng-container *ngIf="totalPages <= 7">
+        <button *ngFor="let page of getPageNumbers()" [class.active]="page === currentPage" (click)="changePage(page)">
+          {{ page }}
+        </button>
+      </ng-container>
+
+      <ng-container *ngIf="totalPages > 7">
+        <!-- First page -->
+        <button [class.active]="currentPage === 1" (click)="changePage(1)">1</button>
+
+        <!-- Ellipsis for skipped pages at start -->
+        <button *ngIf="currentPage > 3" disabled>...</button>
+
+        <!-- Pages around current page -->
+        <ng-container *ngFor="let page of getPageNumbers()">
+          <button *ngIf="page !== 1 && page !== totalPages && (page >= currentPage - 1 && page <= currentPage + 1)"
+            [class.active]="page === currentPage" (click)="changePage(page)">
+            {{ page }}
+          </button>
+        </ng-container>
+
+        <!-- Ellipsis for skipped pages at end -->
+        <button *ngIf="currentPage < totalPages - 2" disabled>...</button>
+
+        <!-- Last page -->
+        <button [class.active]="currentPage === totalPages" (click)="changePage(totalPages)">
+          {{ totalPages }}
+        </button>
+      </ng-container>
+    </div>
+
+    <button class="next-btn" [disabled]="currentPage === totalPages" (click)="changePage(currentPage + 1)"
+      title="Next Page">
       <i class="material-icons">chevron_right</i>
     </button>
   </div>

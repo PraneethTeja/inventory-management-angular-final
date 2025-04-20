@@ -1,3 +1,5 @@
+@import '../../../styles/variables.scss';
+
 .contact-container {
   padding-top: 80px; /* Add space for the fixed navbar */
 }
@@ -15,21 +17,21 @@
   color: white;
   text-align: center;
   padding: 0 20px;
-  margin-bottom: 60px;
+  margin-bottom: 50px;
 }
 
 .hero-content {
   max-width: 800px;
   
   h1 {
-    font-size: 3rem;
+    font-size: 32px;
     font-weight: 700;
     margin-bottom: 20px;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
   }
   
   p {
-    font-size: 1.2rem;
+    font-size: 18px;
     max-width: 600px;
     margin: 0 auto;
     line-height: 1.6;
@@ -60,12 +62,12 @@
 /* Contact Info Styles */
 .contact-info {
   background-color: #f9f9f9;
-  padding: 40px;
+  padding: 30px;
   border-radius: 12px;
   box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
   
   h2 {
-    font-size: 2rem;
+    font-size: 24px;
     margin-bottom: 20px;
     color: #333;
   }
@@ -73,14 +75,14 @@
   .info-description {
     color: #666;
     margin-bottom: 30px;
-    font-size: 1.1rem;
+    font-size: 16px;
     line-height: 1.6;
   }
 }
 
 .info-item {
   display: flex;
-  margin-bottom: 25px;
+  margin-bottom: 20px;
   
   .icon {
     font-size: 24px;
@@ -92,9 +94,9 @@
   
   .details {
     h3 {
-      font-size: 1.2rem;
+      font-size: 18px;
       margin-bottom: 5px;
-      color: #444;
+      color: #333;
     }
     
     p {
@@ -130,12 +132,12 @@
 /* Contact Form Styles */
 .contact-form-container {
   background-color: white;
-  padding: 40px;
+  padding: 30px;
   border-radius: 12px;
   box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
   
   h2 {
-    font-size: 2rem;
+    font-size: 24px;
     margin-bottom: 30px;
     color: #333;
   }
@@ -143,21 +145,21 @@
 
 .contact-form {
   .form-group {
-    margin-bottom: 25px;
+    margin-bottom: 20px;
     
     label {
       display: block;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
       font-weight: 500;
-      color: #444;
+      color: #333;
     }
     
     input, textarea {
       width: 100%;
-      padding: 12px 15px;
-      border: 1px solid #ddd;
+      padding: 15px;
+      border: 1px solid #e1e1e1;
       border-radius: 8px;
-      font-size: 1rem;
+      font-size: 16px;
       
       &:focus {
         outline: none;
@@ -172,7 +174,7 @@
     
     .error-message {
       color: #dc2430;
-      font-size: 0.9rem;
+      font-size: 14px;
       margin-top: 5px;
     }
   }
@@ -184,7 +186,7 @@
   border: none;
   padding: 15px 30px;
   border-radius: 8px;
-  font-size: 1.1rem;
+  font-size: 16px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -197,7 +199,7 @@
 
 .success-message {
   text-align: center;
-  padding: 40px 20px;
+  padding: 30px 20px;
   
   i {
     font-size: 60px;
@@ -206,14 +208,14 @@
   }
   
   h3 {
-    font-size: 1.5rem;
+    font-size: 24px;
     margin-bottom: 15px;
     color: #333;
   }
   
   p {
     color: #666;
-    font-size: 1.1rem;
+    font-size: 16px;
   }
 }
 
@@ -228,7 +230,7 @@
   
   .map-placeholder {
     height: 100%;
-    background-color: #f1f1f1;
+    background-color: #f9f9f9;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -242,7 +244,7 @@
     
     p {
       color: #666;
-      font-size: 1.2rem;
+      font-size: 18px;
     }
   }
 } 

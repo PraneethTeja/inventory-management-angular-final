@@ -206,7 +206,29 @@ export class ManageOrdersComponent implements OnInit {
   }
 
   getPageNumbers(): number[] {
-    return Array.from({ length: this.totalPages }, (_, i) => i + 1);
+    const totalPages = this.totalPages;
+
+    if (totalPages <= 7) {
+      // Return all page numbers if 7 or fewer pages
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    } else {
+      // We need to handle pagination smartly
+      const pages: number[] = [];
+
+      // Always include the first and last page
+      pages.push(1);
+
+      // Add pages around the current page
+      for (let i = Math.max(2, this.currentPage - 1); i <= Math.min(totalPages - 1, this.currentPage + 1); i++) {
+        pages.push(i);
+      }
+
+      // Add the last page
+      pages.push(totalPages);
+
+      // Sort and ensure no duplicates
+      return [...new Set(pages)].sort((a, b) => a - b);
+    }
   }
 
   // View Order Functions

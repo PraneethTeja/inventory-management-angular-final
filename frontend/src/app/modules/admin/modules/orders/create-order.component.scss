@@ -17,7 +17,7 @@
   .create-combo-btn {
     display: flex;
     align-items: center;
-    background-color: #7f2257;
+    background-color: #000000;
     color: white;
     border: none;
     padding: 0.6rem 1rem;
@@ -31,7 +31,7 @@
     }
     
     &:hover {
-      background-color: darken(#7f2257, 5%);
+      background-color: darken(#000000, 5%);
     }
   }
 }
@@ -52,7 +52,7 @@
     position: relative;
     
     &.active {
-      color: #1976d2;
+      color: #000000;
       
       &:after {
         content: '';
@@ -61,12 +61,12 @@
         left: 0;
         width: 100%;
         height: 2px;
-        background-color: #1976d2;
+        background-color: #000000;
       }
     }
 
     &:hover:not(.active) {
-      background-color: rgba(25, 118, 210, 0.05);
+      background-color: rgba(127, 34, 87, 0.05);
     }
   }
 }
@@ -132,7 +132,7 @@
     button {
       width: 100%;
       padding: 0.5rem;
-      background-color: #1976d2;
+      background-color: #000000;
       color: white;
       border: none;
       border-radius: 4px;
@@ -140,7 +140,7 @@
       transition: background-color 0.2s;
 
       &:hover {
-        background-color: #1565c0;
+        background-color: darken(#000000, 10%);
       }
     }
   }
@@ -216,7 +216,7 @@
       .combo-details {
         font-size: 0.85rem;
         margin-top: 0.25rem;
-        color: #1976d2;
+        color: #000000;
       }
     }
     
@@ -313,7 +313,7 @@
     transition: border-color 0.2s;
     
     &:focus {
-      border-color: #1976d2;
+      border-color: #000000;
       outline: none;
     }
   }
@@ -339,19 +339,22 @@
       background: none;
       border: 1px solid #e0e0e0;
       margin-right: 0.75rem;
+      color: #555;
       
       &:hover {
-        background-color: #f5f5f5;
+        background-color: rgba(127, 34, 87, 0.05);
+        border-color: #000000;
+        color: #000000;
       }
     }
     
-    &.submit-btn {
-      background-color: #1976d2;
+    &.submit-btn, &.add-btn {
+      background-color: #000000;
       color: white;
       border: none;
       
       &:hover {
-        background-color: #1565c0;
+        background-color: darken(#000000, 10%);
       }
       
       &:disabled {
@@ -395,6 +398,7 @@
     h2 {
       margin: 0;
       font-size: 1.25rem;
+      color: #000000;
     }
     
     .close-btn {
@@ -403,6 +407,11 @@
       cursor: pointer;
       font-size: 1.5rem;
       line-height: 1;
+      color: #000000;
+      
+      &:hover {
+        opacity: 0.8;
+      }
     }
   }
   
@@ -421,10 +430,10 @@
     padding: 10px; // Add some padding for better appearance
     width: 100%; // Make the input take full width
     box-sizing: border-box; // Ensure padding is included in width
-      margin-bottom: 20px; // Add space below the search bar
+    margin-bottom: 20px; // Add space below the search bar
 
     &:focus {
-      border-color: #007bff; // Change border color on focus
+      border-color: #000000; // Change border color on focus
       outline: none; // Remove default outline
     }
   }
@@ -449,8 +458,8 @@
     transition: all 0.2s;
     
     &.selected {
-      border-color: #1976d2;
-      background-color: rgba(25, 118, 210, 0.05);
+      border-color: #000000;
+      background-color: rgba(127, 34, 87, 0.05);
     }
     
     &:hover:not(.selected) {
@@ -489,8 +498,8 @@
   margin-top: 1rem;
   padding: 0.5rem 1rem;
   background-color: transparent;
-  border: 1px dashed #1976d2;
-  color: #1976d2;
+  border: 1px dashed #000000;
+  color: #000000;
   border-radius: 4px;
   cursor: pointer;
   display: flex;
@@ -503,7 +512,7 @@
   }
   
   &:hover {
-    background-color: rgba(25, 118, 210, 0.05);
+    background-color: rgba(127, 34, 87, 0.05);
   }
 }
 
@@ -571,11 +580,11 @@
       }
       
       &.view-orders-btn {
-        background-color: #3f51b5; // Indigo color
+        background-color: #000000; // Update to purple from indigo
         color: white;
         
         &:hover {
-          background-color: #303f9f; // Darker indigo
+          background-color: darken(#000000, 10%); // Darker purple
         }
       }
     }
@@ -594,7 +603,7 @@
     width: 40px;
     height: 40px;
     border: 4px solid #f3f3f3;
-    border-top: 4px solid #1976d2;
+    border-top: 4px solid #000000;
     border-radius: 50%;
     animation: spin 1s linear infinite;
     margin-bottom: 1rem;
@@ -660,14 +669,14 @@
     transition: all 0.2s;
     
     &:hover {
-      background-color: #f5f5f5;
-      border-color: #ccc;
+      background-color: rgba(127, 34, 87, 0.05);
+      border-color: #000000;
     }
     
     &.active {
-      background-color: #7f2257;
+      background-color: #000000;
       color: white;
-      border-color: #7f2257;
+      border-color: #000000;
     }
   }
 }
@@ -682,7 +691,7 @@
 
 /* Make the add button more prominent */
 .add-btn {
-  background-color: #7f2257;
+  background-color: #000000;
   color: white;
   border: none;
   padding: 10px 20px;
@@ -692,11 +701,11 @@
   transition: background-color 0.2s;
   
   &:hover {
-    background-color: darken(#7f2257, 5%);
+    background-color: darken(#000000, 10%);
   }
   
   &:disabled {
-    background-color: #ccc;
+    background-color: #bdbdbd;
     cursor: not-allowed;
   }
 }

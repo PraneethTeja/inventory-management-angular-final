@@ -42,8 +42,8 @@ export class NavbarComponent implements OnInit {
   currentRoute = '';
 
   ngOnInit(): void {
-    // For demo purposes - in a real app, this would come from a service
-    this.cartCount = this.cartItemCount || 3;
+    // Use the cart item count passed from parent component
+    this.cartCount = this.cartItemCount || 0;
 
     // Check login status - in a real app, this would come from an auth service
     this.checkLoginStatus();

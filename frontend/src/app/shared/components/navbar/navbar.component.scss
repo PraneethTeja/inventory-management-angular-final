@@ -126,21 +126,11 @@ $mobile-breakpoint: 768px;
     }
     
     .login-btn {
-      background-color: $primary-color !important;
+      background-color: #7f2257 !important;
       color: white !important;
-      border: none !important;
       padding: 8px 20px !important;
-      border-radius: 4px !important;
-      font-weight: 500 !important;
-      cursor: pointer !important;
-      transition: background-color 0.3s ease !important;
+      border-radius: 8px !important;
       text-decoration: none !important;
-      display: inline-block !important;
-      text-align: center !important;
-      
-      &:hover {
-        background-color: darken($primary-color, 10%) !important;
-      }
     }
     
     .user-menu {
@@ -329,5 +319,23 @@ $mobile-breakpoint: 768px;
   
   .mobile-toggle {
     display: block;
+  }
+}
+
+.jewelry-navbar .login-btn {
+  background-color: #7f2257 !important;
+  color: white !important;
+  border: none !important;
+  padding: 8px 20px !important;
+  border-radius: 8px !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  transition: background-color 0.3s ease !important;
+  text-decoration: none !important;
+  display: inline-block !important;
+  text-align: center !important;
+  
+  &:hover {
+    background-color: #661c46 !important;
   }
 } 

@@ -1,86 +1,162 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, catchError, map, throwError } from 'rxjs';
+import { Observable, from, of, throwError } from 'rxjs';
+import { catchError, map, switchMap } from 'rxjs/operators';
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+  orderBy,
+  limit,
+  QueryConstraint
+} from 'firebase/firestore';
 
-import { environment } from '../../../environments/environment';
 import { Product, ProductCategory, ProductResponse } from '../models/product.model';
+import { v4 as uuidv4 } from 'uuid';
+import { firestore } from '../../app.config';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ProductService {
-  private apiUrl = `${environment.apiUrl}/products`;
+  private readonly COLLECTION_NAME = 'products';
 
-  constructor(private http: HttpClient) { }
-
-  // Added convenience method to get all products as an array
-  getProducts(): Observable<Product[]> {
-    return this.getAllProducts(1, 100)
-      .pipe(
-        map(response => response.products)
-      );
-  }
+  constructor() { }
 
   getAllProducts(
     page: number = 1,
-    limit: number = 10,
+    pageSize: number = 10,
     category?: ProductCategory,
     featured?: boolean,
     search?: string,
     minPrice?: number,
     maxPrice?: number,
-    sort: string = 'createdAt',
-    order: 'asc' | 'desc' = 'desc'
+    sortField: string = 'createdAt',
+    sortOrder: 'asc' | 'desc' = 'desc'
   ): Observable<ProductResponse> {
-    let params = new HttpParams()
-      .set('page', page.toString())
-      .set('limit', limit.toString())
-      .set('sort', sort)
-      .set('order', order);
+    const queryConstraints: QueryConstraint[] = [];
 
+    // Add filters
     if (category) {
-      params = params.set('category', category);
+      queryConstraints.push(where('category', '==', category));
     }
 
     if (featured !== undefined) {
-      params = params.set('featured', featured.toString());
-    }
-
-    if (search) {
-      params = params.set('search', search);
+      queryConstraints.push(where('featured', '==', featured));
     }
 
     if (minPrice !== undefined) {
-      params = params.set('minPrice', minPrice.toString());
+      queryConstraints.push(where('price', '>=', minPrice));
     }
 
     if (maxPrice !== undefined) {
-      params = params.set('maxPrice', maxPrice.toString());
+      queryConstraints.push(where('price', '<=', maxPrice));
     }
 
-    return this.http.get<ProductResponse>(this.apiUrl, { params }).pipe(
+    // Add sorting
+    queryConstraints.push(orderBy(sortField, sortOrder));
+
+    // Calculate pagination
+    const startAt = (page - 1) * pageSize;
+
+    // Get total count first (for pagination info)
+    return from(this.getFilteredProductsCount(queryConstraints)).pipe(
+      switchMap(async (total) => {
+        const productsQuery = query(
+          collection(firestore, this.COLLECTION_NAME),
+          ...queryConstraints,
+          limit(pageSize)
+        );
+
+        const snapshot = await getDocs(productsQuery);
+        const products: Product[] = [];
+
+        snapshot.forEach(doc => {
+          const data = doc.data() as Omit<Product, '_id'>;
+          products.push({
+            _id: doc.id,
+            ...data
+          } as Product);
+        });
+
+        // Filter by search term if provided (client-side filtering for simplicity)
+        let filteredProducts = products;
+        if (search) {
+          const searchLower = search.toLowerCase();
+          filteredProducts = products.filter(p =>
+            p.name.toLowerCase().includes(searchLower) ||
+            p.description.toLowerCase().includes(searchLower) ||
+            (p.tags && p.tags.some(tag => tag.toLowerCase().includes(searchLower)))
+          );
+        }
+
+        return {
+          products: filteredProducts,
+          pagination: {
+            total,
+            page,
+            limit: pageSize,
+            pages: Math.ceil(total / pageSize)
+          }
+        };
+      }),
       catchError(error => {
         console.error('Get all products error:', error);
-        return throwError(() => new Error(error.error?.message || 'Failed to fetch products'));
+        return throwError(() => new Error(error.message || 'Failed to fetch products'));
       })
     );
   }
 
   getProductById(productId: string): Observable<Product> {
-    return this.http.get<Product>(`${this.apiUrl}/${productId}`).pipe(
+    return from(getDoc(doc(firestore, this.COLLECTION_NAME, productId))).pipe(
+      map(docSnap => {
+        if (!docSnap.exists()) {
+          throw new Error('Product not found');
+        }
+
+        const data = docSnap.data() as Omit<Product, '_id'>;
+        return {
+          _id: docSnap.id,
+          ...data
+        } as Product;
+      }),
       catchError(error => {
         console.error('Get product error:', error);
-        return throwError(() => new Error(error.error?.message || 'Failed to fetch product'));
+        return throwError(() => new Error(error.message || 'Failed to fetch product'));
       })
     );
   }
 
-  getFeaturedProducts(limit: number = 6): Observable<Product[]> {
-    const params = new HttpParams().set('limit', limit.toString());
-    return this.http.get<Product[]>(`${this.apiUrl}/featured`, { params }).pipe(
+  getFeaturedProducts(limitCount: number = 6): Observable<Product[]> {
+    const queryConstraints: QueryConstraint[] = [
+      where('featured', '==', true),
+      orderBy('createdAt', 'desc'),
+      limit(limitCount)
+    ];
+
+    return from(getDocs(query(
+      collection(firestore, this.COLLECTION_NAME),
+      ...queryConstraints
+    ))).pipe(
+      map(snapshot => {
+        const products: Product[] = [];
+        snapshot.forEach(doc => {
+          const data = doc.data() as Omit<Product, '_id'>;
+          products.push({
+            _id: doc.id,
+            ...data
+          } as Product);
+        });
+        return products;
+      }),
       catchError(error => {
         console.error('Get featured products error:', error);
-        return throwError(() => new Error(error.error?.message || 'Failed to fetch featured products'));
+        return throwError(() => new Error(error.message || 'Failed to fetch featured products'));
       })
     );
   }
@@ -88,49 +164,105 @@ export class ProductService {
   getProductsByCategory(
     category: ProductCategory,
     page: number = 1,
-    limit: number = 10,
-    sort: string = 'createdAt',
-    order: 'asc' | 'desc' = 'desc'
+    pageSize: number = 10,
+    sortField: string = 'createdAt',
+    sortOrder: 'asc' | 'desc' = 'desc'
   ): Observable<ProductResponse> {
-    const params = new HttpParams()
-      .set('page', page.toString())
-      .set('limit', limit.toString())
-      .set('sort', sort)
-      .set('order', order);
+    const queryConstraints: QueryConstraint[] = [
+      where('category', '==', category),
+      orderBy(sortField, sortOrder)
+    ];
 
-    return this.http.get<ProductResponse>(`${this.apiUrl}/category/${category}`, { params }).pipe(
+    return from(this.getFilteredProductsCount(queryConstraints)).pipe(
+      switchMap(async (total) => {
+        const productsQuery = query(
+          collection(firestore, this.COLLECTION_NAME),
+          ...queryConstraints,
+          limit(pageSize)
+        );
+
+        const snapshot = await getDocs(productsQuery);
+        const products: Product[] = [];
+
+        snapshot.forEach(doc => {
+          const data = doc.data() as Omit<Product, '_id'>;
+          products.push({
+            _id: doc.id,
+            ...data
+          } as Product);
+        });
+
+        return {
+          products,
+          pagination: {
+            total,
+            page,
+            limit: pageSize,
+            pages: Math.ceil(total / pageSize)
+          }
+        };
+      }),
       catchError(error => {
         console.error('Get products by category error:', error);
-        return throwError(() => new Error(error.error?.message || 'Failed to fetch products'));
+        return throwError(() => new Error(error.message || 'Failed to fetch products'));
       })
     );
   }
 
   // Admin methods
-  createProduct(product: Partial<Product>): Observable<Product> {
-    return this.http.post<Product>(this.apiUrl, product).pipe(
+  createProduct(product: Omit<Product, '_id'>): Observable<Product> {
+    const productWithId = {
+      ...product,
+      productCode: product.productCode || `PROD-${uuidv4().slice(0, 8)}`,
+      createdAt: new Date()
+    };
+
+    return from(addDoc(collection(firestore, this.COLLECTION_NAME), productWithId)).pipe(
+      map(docRef => ({
+        _id: docRef.id,
+        ...productWithId
+      } as Product)),
       catchError(error => {
         console.error('Create product error:', error);
-        return throwError(() => new Error(error.error?.message || 'Failed to create product'));
+        return throwError(() => new Error(error.message || 'Failed to create product'));
       })
     );
   }
 
-  updateProduct(productId: string, product: Partial<Product>): Observable<Product> {
-    return this.http.put<Product>(`${this.apiUrl}/${productId}`, product).pipe(
+  updateProduct(productId: string, updates: Partial<Product>): Observable<Product> {
+    const docRef = doc(firestore, this.COLLECTION_NAME, productId);
+
+    return from(updateDoc(docRef, { ...updates, updatedAt: new Date() })).pipe(
+      switchMap(() => this.getProductById(productId)),
       catchError(error => {
         console.error('Update product error:', error);
-        return throwError(() => new Error(error.error?.message || 'Failed to update product'));
+        return throwError(() => new Error(error.message || 'Failed to update product'));
       })
     );
   }
 
-  deleteProduct(productId: string): Observable<{ message: string }> {
-    return this.http.delete<{ message: string }>(`${this.apiUrl}/${productId}`).pipe(
+  deleteProduct(productId: string): Observable<void> {
+    return from(deleteDoc(doc(firestore, this.COLLECTION_NAME, productId))).pipe(
       catchError(error => {
         console.error('Delete product error:', error);
-        return throwError(() => new Error(error.error?.message || 'Failed to delete product'));
+        return throwError(() => new Error(error.message || 'Failed to delete product'));
       })
     );
+  }
+
+  // Helper methods
+  private async getFilteredProductsCount(queryConstraints: QueryConstraint[]): Promise<number> {
+    try {
+      const q = query(
+        collection(firestore, this.COLLECTION_NAME),
+        ...queryConstraints
+      );
+
+      const snapshot = await getDocs(q);
+      return snapshot.size;
+    } catch (error) {
+      console.error('Error getting products count:', error);
+      return 0;
+    }
   }
 } 

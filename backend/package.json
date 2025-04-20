@@ -31,6 +31,7 @@
     "mongoose": "^8.13.2"
   },
   "devDependencies": {
+    "faker": "^6.6.6",
     "morgan": "^1.10.0",
     "nodemon": "^3.0.1"
   }

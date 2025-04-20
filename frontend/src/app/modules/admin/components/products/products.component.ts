@@ -92,35 +92,37 @@ export class ProductsComponent implements OnInit {
     this.isLoading = true;
     this.error = '';
 
-    console.log('Attempting to load products from API...');
+    console.log('Attempting to load products from API with proper parameters...');
 
-    this.http.get<Product[]>(`${environment.apiUrl}/products`)
-      .pipe(
-        catchError(err => {
-          console.error('Error loading products from API:', err);
-          console.log('Falling back to mock data...');
-          return of(this.getMockProducts());
-        })
-      )
+    // Build query parameters based on product controller API
+    const params: Record<string, string> = {
+      page: '1',
+      limit: '50', // Load up to 50 products at once
+      sort: 'createdAt', // Default sort by creation date
+      order: 'desc' // Default sort order is descending (newest first)
+    };
+
+    // Add category filter if not 'All'
+    if (this.selectedCategory !== 'All') {
+      params['category'] = this.selectedCategory;
+    }
+
+    this.http.get<any>(`${environment.apiUrl}/products`, { params })
       .subscribe({
-        next: (data) => {
+        next: (response) => {
           console.log('Response received, setting products data');
-          // this.products = data;
-          this.products = this.getMockProducts();
+          this.products = response.products.length ? response.products : [];
           this.filterProducts();
           this.setLoadingState(false);
-          console.log('Loading state set to false, products loaded successfully:', this.products);
         },
         error: (err) => {
           console.error('Error in subscribe error handler:', err);
-          this.error = 'Failed to load products. Using mock data instead.';
-          this.products = this.getMockProducts();
+          this.error = 'Failed to load products.';
+          this.products = [];
           this.filterProducts();
           this.setLoadingState(false);
-          console.log('Error handler: Loading state set to false, using mock data');
         },
         complete: () => {
-          console.log('Observable completed, ensuring loading state is false');
           this.setLoadingState(false);
         }
       });
@@ -1145,88 +1147,35 @@ export class ProductsComponent implements OnInit {
     this.isLoading = true;
 
     if (this.showAddModal) {
-      // For mock mode, simply add to local array
-      try {
-        const newProduct: Product = {
-          _id: Date.now().toString(),// Generate a mock ID
-          ...formData,
-          inStock: formData.stockQuantity > 0,
-          imageUrls: [],
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          discountedPrice: formData.discount.percentage > 0
-            ? formData.price * (1 - formData.discount.percentage / 100)
-            : formData.price
-        };
-
-        this.products.unshift(newProduct);
-        this.filterProducts();
-        this.closeModal();
-        this.isLoading = false;
-      } catch (err) {
-        this.error = 'Failed to create product. Please try again.';
-        this.isLoading = false;
-        console.error('Error creating product:', err);
-      }
-
-      // In a real scenario, this would be an API call
-      /*
       this.http.post(`${environment.apiUrl}/products`, formData)
         .subscribe({
-          next: () => {
+          next: (response) => {
+            console.log('Product created successfully:', response);
             this.loadProducts();
             this.closeModal();
             this.isLoading = false;
           },
           error: (err) => {
-            this.error = 'Failed to create product. Please try again.';
+            this.error = err.error?.message || 'Failed to create product. Please try again.';
             this.isLoading = false;
             console.error('Error creating product:', err);
           }
         });
-      */
     } else if (this.showEditModal && this.currentProduct) {
-      // For mock mode, update in the local array
-      try {
-        const index = this.products.findIndex(p => p._id === this.currentProduct?._id);
-        if (index !== -1) {
-          const updatedProduct: Product = {
-            ...this.products[index],
-            ...formData,
-            inStock: formData.stockQuantity > 0,
-            updatedAt: new Date(),
-            discountedPrice: formData.discount.percentage > 0
-              ? formData.price * (1 - formData.discount.percentage / 100)
-              : formData.price
-          };
-
-          this.products[index] = updatedProduct;
-          this.filterProducts();
-          this.closeModal();
-          this.isLoading = false;
-        }
-      } catch (err) {
-        this.error = 'Failed to update product. Please try again.';
-        this.isLoading = false;
-        console.error('Error updating product:', err);
-      }
-
-      // In a real scenario, this would be an API call
-      /*
       this.http.put(`${environment.apiUrl}/products/${this.currentProduct._id}`, formData)
         .subscribe({
-          next: () => {
+          next: (response) => {
+            console.log('Product updated successfully:', response);
             this.loadProducts();
             this.closeModal();
             this.isLoading = false;
           },
           error: (err) => {
-            this.error = 'Failed to update product. Please try again.';
+            this.error = err.error?.message || 'Failed to update product. Please try again.';
             this.isLoading = false;
             console.error('Error updating product:', err);
           }
         });
-      */
     }
   }
 
@@ -1234,32 +1183,26 @@ export class ProductsComponent implements OnInit {
     if (confirm(`Are you sure you want to delete "${product.name}"?`)) {
       this.isLoading = true;
 
-      // For mock mode, remove from the local array
-      try {
-        this.products = this.products.filter(p => p._id !== product._id);
-        this.filterProducts();
-        this.isLoading = false;
-      } catch (err) {
-        this.error = 'Failed to delete product. Please try again.';
-        this.isLoading = false;
-        console.error('Error deleting product:', err);
-      }
-
-      // In a real scenario, this would be an API call
-      /*
       this.http.delete(`${environment.apiUrl}/products/${product._id}`)
         .subscribe({
-          next: () => {
+          next: (response) => {
+            console.log('Product deleted successfully:', response);
             this.loadProducts();
             this.isLoading = false;
           },
           error: (err) => {
-            this.error = 'Failed to delete product. Please try again.';
+            this.error = err.error?.message || 'Failed to delete product. Please try again.';
             this.isLoading = false;
             console.error('Error deleting product:', err);
+
+            if (environment.production === false) {
+              console.log('Development mode: removing product from local array');
+              this.products = this.products.filter(p => p._id !== product._id);
+              this.filterProducts();
+              this.isLoading = false;
+            }
           }
         });
-      */
     }
   }
 

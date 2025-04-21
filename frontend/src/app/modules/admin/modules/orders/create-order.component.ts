@@ -15,7 +15,13 @@ import {
   getDocs,
   query,
   orderBy,
-  limit
+  limit,
+  addDoc,
+  doc,
+  setDoc,
+  getDoc,
+  updateDoc,
+  serverTimestamp
 } from 'firebase/firestore';
 import { firestore } from '../../../../app.config';
 
@@ -66,7 +72,6 @@ export class CreateOrderComponent implements OnInit {
   showAddComboModal = false;
 
   // WhatsApp integration
-  whatsappLink = '';
   showWhatsAppButton = false;
   sendingToWhatsApp = false;
   createdOrderId = '';
@@ -376,7 +381,11 @@ export class CreateOrderComponent implements OnInit {
       return orderItem;
     });
 
+    // Generate a user-friendly order ID: ORD-[timestamp in milliseconds]
+    const friendlyOrderId = `ORD-${Date.now().toString().slice(-6)}`;
+
     const orderData = {
+      _id: friendlyOrderId, // User-friendly order ID
       customer: {
         name: customerData.name,
         email: customerData.email,
@@ -394,111 +403,109 @@ export class CreateOrderComponent implements OnInit {
       whatsapp: {
         messageSent: false
       },
-      notes: notes
+      notes: notes,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
     };
 
-    // Mock implementation - simulate API call with setTimeout
-    setTimeout(() => {
-      try {
-        // Create a mock order response
-        const mockOrderId = 'ORDER-' + Date.now();
-        const mockOrderResponse = {
-          _id: mockOrderId,
-          ...orderData,
-          createdAt: new Date(),
-          updatedAt: new Date()
-        };
-
-        console.log('Mock order created:', mockOrderResponse);
-        this.success = `Order #${mockOrderResponse._id} created successfully!`;
+    // Save order to Firestore
+    this.saveOrderToFirestore(orderData)
+      .then(orderId => {
+        console.log('Order created in Firestore:', orderId);
+        this.success = `Order #${friendlyOrderId} created successfully!`;
         this.isLoading = false;
 
         // Store the order ID
-        this.createdOrderId = mockOrderId;
+        this.createdOrderId = friendlyOrderId;
 
         // Show WhatsApp option
         this.showWhatsAppButton = true;
 
-        // Generate WhatsApp redirect link
-        this.getWhatsAppLink(mockOrderResponse._id);
-
         // Clear order items
         this.orderItems = [];
         this.updateOrderSummary();
-      } catch (err) {
+      })
+      .catch(error => {
         this.error = 'Failed to create order. Please try again.';
         this.isLoading = false;
-        console.error('Error creating order:', err);
-      }
-    }, 800); // Simulate network delay
-
-    // Comment out the actual API call
-    /*
-    this.orderService.createOrder(orderData).subscribe({
-      next: (response) => {
-        this.success = `Order #${response._id} created successfully!`;
-        this.isLoading = false;
-        
-        // Store the order ID
-        this.createdOrderId = response._id;
-        
-        // Show WhatsApp option
-        this.showWhatsAppButton = true;
-        
-        // Generate WhatsApp redirect link
-        this.getWhatsAppLink(response._id);
-        
-        // Clear order items
-        this.orderItems = [];
-        this.updateOrderSummary();
-      },
-      error: (err) => {
-        this.error = 'Failed to create order. Please try again.';
-        this.isLoading = false;
-        console.error('Error creating order:', err);
-      }
-    });
-    */
+        console.error('Error creating order in Firestore:', error);
+      });
   }
 
-  getWhatsAppLink(orderId: string): void {
-    this.cartService.getWhatsAppRedirectUrl(orderId).subscribe({
-      next: (response) => {
-        this.whatsappLink = response.redirectUrl;
-      },
-      error: (err) => {
-        console.error('Error generating WhatsApp link:', err);
-        this.error = 'Failed to generate WhatsApp link. You can still view the order.';
-      }
-    });
+  // Function to save order to Firestore
+  async saveOrderToFirestore(orderData: any): Promise<string> {
+    try {
+      // Get the 'orders' collection reference
+      const ordersCollectionRef = collection(firestore, 'orders');
+
+      // Add the document to the collection (Firebase will generate a unique ID)
+      const orderDocRef = await addDoc(ordersCollectionRef, orderData);
+
+      // Additionally, set a document with the friendly order ID
+      await setDoc(doc(firestore, 'orders', orderData._id), orderData);
+
+      return orderData._id;
+    } catch (error) {
+      console.error('Error saving order to Firestore:', error);
+      throw error;
+    }
   }
 
   sendToWhatsApp(orderId: string): void {
     this.sendingToWhatsApp = true;
 
-    this.cartService.sendOrderToWhatsApp(orderId).subscribe({
-      next: (response) => {
-        this.sendingToWhatsApp = false;
+    // Generate WhatsApp message with order details
+    const message = this.generateWhatsAppMessage();
 
-        // If we have a direct link, open it in a new window
-        if (response.whatsappLink) {
-          window.open(response.whatsappLink, '_blank');
-        }
+    // Get customer phone from the form
+    const customerPhone = this.customerForm.get('phone')?.value;
+    if (!customerPhone) {
+      this.sendingToWhatsApp = false;
+      this.error = 'Customer phone number is missing. Cannot send to WhatsApp.';
+      return;
+    }
 
-        // Update success message
-        this.success += ' Order details sent to WhatsApp.';
+    // Format phone number for WhatsApp (add country code if not present)
+    const formattedPhone = customerPhone.startsWith('91') ? customerPhone : `91${customerPhone}`;
 
-        // Navigate to orders page after a delay
-        setTimeout(() => {
-          this.router.navigate(['/admin/orders']);
-        }, 2000);
-      },
-      error: (err) => {
-        this.sendingToWhatsApp = false;
-        console.error('Error sending to WhatsApp:', err);
-        this.error = 'Failed to send order to WhatsApp. Please try again.';
-      }
-    });
+    // Create WhatsApp URL (web and app compatible)
+    const whatsappUrl = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`;
+
+    // Open WhatsApp in a new tab
+    window.open(whatsappUrl, '_blank');
+
+    this.sendingToWhatsApp = false;
+
+    // Update success message
+    this.success += ' Order details opened in WhatsApp.';
+  }
+
+  private generateWhatsAppMessage(): string {
+    const customerData = this.customerForm.value;
+
+    // Simple confirmation message
+    let message = '🛍️ *Order Confirmation - Jewelry Shop* 🛍️\n\n';
+
+    // Add greeting with customer name
+    message += `Dear ${customerData.name},\n\n`;
+
+    // Add order confirmation
+    message += `Thank you for your order! We're pleased to confirm that your order #${this.createdOrderId} has been received and is being processed.\n\n`;
+
+    // Add order total
+    message += `*Order Total:* ₹${this.total.toFixed(2)}\n\n`;
+
+    // Add next steps
+    message += `Your order will be packed soon and we'll update you on the shipping details.\n\n`;
+
+    // Add closing
+    message += `If you have any questions about your order, please don't hesitate to contact us.\n\n`;
+
+    // Add thank you note
+    message += `Thank you for shopping with us!\n`;
+    message += `Jewelry Shop Team`;
+
+    return message;
   }
 
   navigateToOrders(): void {

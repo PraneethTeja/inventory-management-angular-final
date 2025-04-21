@@ -1,0 +1,110 @@
+<div class="cart-page-container">
+  <app-navbar [activePage]="'cart'" [cartItemCount]="cartItems.length"></app-navbar>
+
+  <div class="container">
+    <div class="cart-header">
+      <h1>Your Shopping Cart</h1>
+      <p *ngIf="cartItems.length > 0">{{ cartItems.length }} {{ cartItems.length === 1 ? 'item' : 'items' }} in your
+        cart</p>
+    </div>
+
+    <div *ngIf="cartItems.length === 0" class="empty-cart">
+      <div class="empty-cart-icon">
+        <i class="fas fa-shopping-cart"></i>
+      </div>
+      <h2>Your cart is empty</h2>
+      <p>Looks like you haven't added any items to your cart yet.</p>
+      <button routerLink="/shop" class="btn-primary">Continue Shopping</button>
+    </div>
+
+    <div *ngIf="cartItems.length > 0" class="cart-content">
+      <div class="cart-main">
+        <div class="customer-form-container">
+          <h3>Your Information</h3>
+          <form [formGroup]="customerForm" class="customer-form">
+            <div class="form-group">
+              <label for="name">Name</label>
+              <input type="text" id="name" formControlName="name" class="form-input"
+                [class.is-invalid]="customerForm.get('name')?.invalid && customerForm.get('name')?.touched">
+              <div *ngIf="customerForm.get('name')?.invalid && customerForm.get('name')?.touched" class="error-message">
+                Name is required
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="email">Email</label>
+              <input type="email" id="email" formControlName="email" class="form-input"
+                [class.is-invalid]="customerForm.get('email')?.invalid && customerForm.get('email')?.touched">
+              <div *ngIf="customerForm.get('email')?.invalid && customerForm.get('email')?.touched"
+                class="error-message">
+                Valid email is required
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="phone">Phone</label>
+              <input type="tel" id="phone" formControlName="phone" class="form-input"
+                placeholder="10-digit mobile number"
+                [class.is-invalid]="customerForm.get('phone')?.invalid && customerForm.get('phone')?.touched">
+              <div *ngIf="customerForm.get('phone')?.invalid && customerForm.get('phone')?.touched"
+                class="error-message">
+                Valid 10-digit phone number is required
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <div class="cart-items">
+          <div *ngFor="let item of cartItems" class="cart-item">
+            <div class="item-image">
+              <img [src]="item.imageUrl || 'assets/images/placeholder.jpg'" [alt]="item.name">
+            </div>
+            <div class="item-details">
+              <h3>{{ item.name }}</h3>
+              <p class="item-price">{{ item.price | currency:'INR' }}</p>
+              <p *ngIf="item.productCode" class="item-code">Code: {{ item.productCode }}</p>
+              <p *ngIf="item.type" class="item-type">Type: {{ item.type }}</p>
+            </div>
+            <div class="item-quantity">
+              <button (click)="decreaseQuantity(item.productId)" class="qty-btn">
+                <i class="fas fa-minus"></i>
+              </button>
+              <span class="qty-value">{{ item.quantity }}</span>
+              <button (click)="increaseQuantity(item.productId)" class="qty-btn">
+                <i class="fas fa-plus"></i>
+              </button>
+            </div>
+            <div class="item-total">
+              {{ (item.price * item.quantity) | currency:'INR' }}
+            </div>
+            <button (click)="removeItem(item.productId)" class="remove-item">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cart-summary">
+        <h3>Order Summary</h3>
+        <div class="summary-row">
+          <span>Subtotal</span>
+          <span>{{ subtotal | currency:'INR' }}</span>
+        </div>
+        <div class="summary-row">
+          <span>Shipping</span>
+          <span>{{ shipping | currency:'INR' }}</span>
+        </div>
+        <div class="summary-row">
+          <span>Tax (18%)</span>
+          <span>{{ tax | currency:'INR' }}</span>
+        </div>
+        <div class="summary-row total">
+          <span>Total</span>
+          <span>{{ total | currency:'INR' }}</span>
+        </div>
+        <button [disabled]="customerForm.invalid" (click)="proceedToWhatsAppCheckout()" class="checkout-btn">
+          <i class="fab fa-whatsapp me-2"></i> Complete via WhatsApp
+        </button>
+        <button routerLink="/shop" class="continue-shopping">Continue Shopping</button>
+      </div>
+    </div>
+  </div>
+</div>

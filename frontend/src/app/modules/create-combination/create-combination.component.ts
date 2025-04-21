@@ -290,13 +290,32 @@ export class CreateCombinationComponent implements OnInit {
       // Since we're using SimpleCartService, we need to adapt our item format
       const comboProductId = `combo-${Date.now()}`;
 
-      // Add to cart using SimpleCartService format
+      // Create pendant details array with full information
+      const pendantDetails = this.selectedPendants.map(pendant => ({
+        name: pendant.name,
+        productCode: pendant.productCode || 'N/A',
+        quantity: 1,
+        price: pendant.price
+      }));
+
+      // Add to cart using SimpleCartService format with detailed combination information
       this.cartService.addToCart({
         productId: comboProductId,
         name: comboName,
         price: comboPrice,
         quantity: 1,
-        imageUrl: comboImage
+        imageUrl: comboImage,
+        type: 'combination',
+        productCode: comboProductId,
+        chainDetails: {
+          name: this.selectedChain.name,
+          productCode: this.selectedChain.productCode || 'N/A',
+          price: this.selectedChain.price,
+          type: this.selectedChainType,
+          size: this.selectedChainSize,
+          layer: this.selectedChainLayer
+        },
+        pendantDetails: pendantDetails
       });
 
       // Show success message and update cart count

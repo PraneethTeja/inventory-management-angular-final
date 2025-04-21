@@ -13,7 +13,9 @@ import {
   where,
   limit,
   Timestamp,
-  QueryConstraint
+  QueryConstraint,
+  serverTimestamp,
+  getDoc
 } from 'firebase/firestore';
 import { firestore } from '../../../../app.config';
 
@@ -49,8 +51,10 @@ export class ManageOrdersComponent implements OnInit {
   // Modal properties
   showViewModal: boolean = false;
   showEditModal: boolean = false;
+  showSendMessageModal: boolean = false;
   selectedOrder: any = null;
   editedOrder: any = null;
+  previousOrderStatus: string = '';
 
   // Status and payment options
   statusOptions = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'canceled'];
@@ -247,6 +251,8 @@ export class ManageOrdersComponent implements OnInit {
     // Create a deep copy to avoid modifying the original data
     this.selectedOrder = order;
     this.editedOrder = JSON.parse(JSON.stringify(order));
+    // Store the previous status to compare after save
+    this.previousOrderStatus = order.status;
     this.showEditModal = true;
   }
 
@@ -254,6 +260,7 @@ export class ManageOrdersComponent implements OnInit {
     this.showEditModal = false;
     this.selectedOrder = null;
     this.editedOrder = null;
+    this.previousOrderStatus = '';
   }
 
   async saveOrderChanges(): Promise<void> {
@@ -267,9 +274,17 @@ export class ManageOrdersComponent implements OnInit {
       const { id, ...updateData } = this.editedOrder;
 
       // Ensure updatedAt is set
-      updateData.updatedAt = new Date();
+      updateData.updatedAt = serverTimestamp();
 
       await updateDoc(orderRef, updateData);
+
+      // Check if order status has changed
+      const statusChanged = this.previousOrderStatus !== this.editedOrder.status;
+
+      // If status changed, trigger WhatsApp notification
+      if (statusChanged && this.editedOrder.customer && this.editedOrder.customer.phone) {
+        this.sendStatusUpdateToWhatsApp(this.editedOrder);
+      }
 
       // Reload orders to reflect changes
       await this.loadOrders();
@@ -286,6 +301,113 @@ export class ManageOrdersComponent implements OnInit {
       this.error = 'Failed to update order. Please try again.';
       this.isLoading = false;
     }
+  }
+
+  // WhatsApp notification for status update
+  sendStatusUpdateToWhatsApp(order: any): void {
+    try {
+      // Generate WhatsApp message with status update
+      const message = this.generateStatusUpdateMessage(order);
+
+      // Get customer phone
+      const customerPhone = order.customer.phone;
+      if (!customerPhone) {
+        console.error('Customer phone number is missing');
+        return;
+      }
+
+      // Format phone number for WhatsApp (add country code if not present)
+      const formattedPhone = customerPhone.startsWith('91') ? customerPhone : `91${customerPhone}`;
+
+      // Create WhatsApp URL
+      const whatsappUrl = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`;
+
+      // Open WhatsApp in a new tab
+      window.open(whatsappUrl, '_blank');
+
+      // Update WhatsApp status in Firestore
+      this.updateWhatsAppStatusInFirestore(order.id);
+    } catch (error) {
+      console.error('Error sending WhatsApp status update:', error);
+    }
+  }
+
+  // Update WhatsApp status in Firestore
+  private async updateWhatsAppStatusInFirestore(orderId: string): Promise<void> {
+    try {
+      const orderRef = doc(firestore, this.COLLECTION_NAME, orderId);
+      await updateDoc(orderRef, {
+        'whatsapp.messageSent': true,
+        'whatsapp.lastMessageTimestamp': serverTimestamp()
+      });
+      console.log('WhatsApp status updated in Firestore');
+    } catch (error) {
+      console.error('Error updating WhatsApp status:', error);
+    }
+  }
+
+  // Generate message for status update
+  private generateStatusUpdateMessage(order: any): string {
+    const customerName = order.customer.name || 'Valued Customer';
+    const orderId = order.id || order._id;
+    const orderStatus = order.status;
+
+    // Start with greeting
+    let message = `🛍️ *Order Update - Jewelry Shop* 🛍️\n\n`;
+
+    // Add greeting with customer name
+    message += `Dear ${customerName},\n\n`;
+
+    // Add status update based on the new status
+    switch (orderStatus) {
+      case 'confirmed':
+        message += `Great news! Your order #${orderId} has been confirmed and is being prepared for processing.\n\n`;
+        break;
+      case 'processing':
+        message += `Your order #${orderId} is now being processed. We're preparing your items with care.\n\n`;
+        break;
+      case 'shipped':
+        message += `Your order #${orderId} has been shipped! Your beautiful jewelry is on its way to you.\n\n`;
+        // Add shipping details if available
+        if (order.shippingDetails) {
+          message += `*Shipping Details:*\n`;
+          if (order.shippingDetails.trackingNumber) {
+            message += `Tracking Number: ${order.shippingDetails.trackingNumber}\n`;
+          }
+          if (order.shippingDetails.carrier) {
+            message += `Carrier: ${order.shippingDetails.carrier}\n`;
+          }
+          message += `\n`;
+        }
+        break;
+      case 'delivered':
+        message += `Your order #${orderId} has been delivered! We hope you love your new jewelry.\n\n`;
+        message += `If you have any questions or concerns about your purchase, please don't hesitate to contact us.\n\n`;
+        message += `We'd love to see how you style your new pieces! Tag us on social media.\n\n`;
+        break;
+      case 'canceled':
+        message += `We're sorry to inform you that your order #${orderId} has been cancelled.\n\n`;
+        message += `If you have any questions about this cancellation or would like to place a new order, please contact our customer service team.\n\n`;
+        break;
+      default:
+        message += `This is an update regarding your order #${orderId}. The status of your order is now: ${orderStatus}.\n\n`;
+    }
+
+    // Add order total
+    if (order.totalAmount) {
+      message += `*Order Total:* ₹${order.totalAmount.toFixed(2)}\n\n`;
+    }
+
+    // Add closing
+    message += `Thank you for shopping with us!\n`;
+    message += `Jewelry Shop Team`;
+
+    return message;
+  }
+
+  // Function to manually send a status update for any order
+  sendManualStatusUpdate(order: any): void {
+    this.sendStatusUpdateToWhatsApp(order);
   }
 
   // WhatsApp Functions

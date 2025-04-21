@@ -16,7 +16,8 @@
     <!-- WhatsApp options -->
     <div class="whatsapp-options" *ngIf="showWhatsAppButton">
       <button class="whatsapp-btn" [disabled]="sendingToWhatsApp" (click)="sendToWhatsApp(createdOrderId)">
-        <span *ngIf="!sendingToWhatsApp">Send to WhatsApp</span>
+        <i class="fab fa-whatsapp me-2"></i>
+        <span *ngIf="!sendingToWhatsApp">Send to Customer via WhatsApp</span>
         <span *ngIf="sendingToWhatsApp">Sending...</span>
       </button>
 

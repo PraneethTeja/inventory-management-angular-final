@@ -279,6 +279,10 @@
       </div>
 
       <div class="modal-footer">
+        <button class="whatsapp-btn" (click)="sendManualStatusUpdate(selectedOrder)"
+          *ngIf="selectedOrder?.customer?.phone">
+          <i class="fab fa-whatsapp me-2"></i> Send Status Update
+        </button>
         <button class="secondary-btn" (click)="closeViewModal()">Close</button>
         <button class="primary-btn" (click)="editOrder(selectedOrder); closeViewModal()">Edit Order</button>
       </div>

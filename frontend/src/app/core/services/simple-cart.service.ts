@@ -7,6 +7,22 @@ export interface SimpleCartItem {
   price: number;
   quantity: number;
   imageUrl: string;
+  type?: 'chain' | 'pendant' | 'combination' | string;
+  productCode?: string;
+  chainDetails?: {
+    name: string;
+    productCode?: string;
+    price?: number;
+    type?: string;
+    size?: string;
+    layer?: string;
+  };
+  pendantDetails?: Array<{
+    name: string;
+    productCode?: string;
+    quantity: number;
+    price?: number;
+  }>;
 }
 
 @Injectable({

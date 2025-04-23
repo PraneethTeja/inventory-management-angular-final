@@ -17,52 +17,76 @@
   </div>
 
   <div class="dashboard-content" *ngIf="!isLoading && !error">
-    <div class="dashboard-stats" style="display: flex; gap: 20px; width: 100%;">
+    <!-- Stats Cards Row -->
+    <div class="stats-grid">
+      <!-- Orders Card -->
       <div class="stat-card">
-        <div class="icon" style="background-color: #2196F3;">
+        <div class="stat-icon orders">
           <i class="material-icons">shopping_cart</i>
         </div>
         <div class="stat-content">
-          <div class="stat-title">Total Orders</div>
           <div class="stat-value">{{ stats.orders.total }}</div>
-          <div class="stat-description">{{ stats.orders.pending }} pending</div>
+          <div class="stat-label">Total Orders</div>
+          <div class="stat-change positive">
+            <i class="material-icons">arrow_upward</i>
+            <span>{{ stats.orders.pending }} pending</span>
+          </div>
         </div>
       </div>
 
+      <!-- Revenue Card -->
       <div class="stat-card">
-        <div class="icon" style="background-color: #4CAF50;">
+        <div class="stat-icon sales">
           <i class="material-icons">payments</i>
         </div>
         <div class="stat-content">
-          <div class="stat-title">Total Revenue</div>
-          <div class="stat-value">₹{{ stats.orders.revenue.toLocaleString() }}</div>
-          <div class="stat-description">From {{ stats.orders.delivered }} delivered orders</div>
+          <div class="stat-value">
+            <span *ngIf="isRevenueHidden">&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;</span>
+            <span *ngIf="!isRevenueHidden">₹{{ stats.orders.revenue.toLocaleString() }}</span>
+            <button class="toggle-visibility-btn" (click)="toggleRevenueVisibility()">
+              <i class="material-icons">{{ isRevenueHidden ? 'visibility' : 'visibility_off' }}</i>
+            </button>
+          </div>
+          <div class="stat-label">Total Revenue</div>
+          <div class="stat-change positive">
+            <i class="material-icons">check_circle</i>
+            <span>{{ stats.orders.delivered }} delivered</span>
+          </div>
         </div>
       </div>
 
+      <!-- Products Card -->
       <div class="stat-card">
-        <div class="icon" style="background-color: #E91E63;">
+        <div class="stat-icon products">
           <i class="material-icons">inventory_2</i>
         </div>
         <div class="stat-content">
-          <div class="stat-title">Products</div>
           <div class="stat-value">{{ stats.products.total }}</div>
-          <div class="stat-description">{{ stats.products.lowStock }} low in stock</div>
+          <div class="stat-label">Total Products</div>
+          <div class="stat-change" [ngClass]="stats.products.lowStock > 5 ? 'negative' : 'neutral'">
+            <i class="material-icons">{{ stats.products.lowStock > 5 ? 'warning' : 'info' }}</i>
+            <span>{{ stats.products.lowStock }} low in stock</span>
+          </div>
         </div>
       </div>
 
+      <!-- Customers Card -->
       <div class="stat-card">
-        <div class="icon" style="background-color: #FF9800;">
+        <div class="stat-icon customers">
           <i class="material-icons">people</i>
         </div>
         <div class="stat-content">
-          <div class="stat-title">Customers</div>
           <div class="stat-value">{{ stats.customers?.total || 0 }}</div>
-          <div class="stat-description">{{ stats.customers?.new || 0 }} new this month</div>
+          <div class="stat-label">Total Customers</div>
+          <div class="stat-change positive">
+            <i class="material-icons">person_add</i>
+            <span>{{ stats.customers?.new || 0 }} new this month</span>
+          </div>
         </div>
       </div>
     </div>
 
+    <!-- Recent Orders Section -->
     <div class="recent-orders">
       <div class="section-header">
         <h3>Recent Orders</h3>

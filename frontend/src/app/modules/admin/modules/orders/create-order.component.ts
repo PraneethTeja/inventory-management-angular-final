@@ -25,6 +25,11 @@ import {
 } from 'firebase/firestore';
 import { firestore } from '../../../../app.config';
 
+// Add a new interface for pendants with quantity
+interface PendantWithQuantity extends Product {
+  quantity: number;
+}
+
 @Component({
   selector: 'app-create-order',
   standalone: true,
@@ -43,7 +48,7 @@ export class CreateOrderComponent implements OnInit {
   success = '';
 
   // Selected products for combination
-  selectedPendants: Product[] = [];
+  selectedPendants: PendantWithQuantity[] = [];
   selectedChain: Product | null = null;
   filteredChains: Product[] = [];
   filteredPendants: Product[] = [];
@@ -85,8 +90,9 @@ export class CreateOrderComponent implements OnInit {
   ) {
     this.customerForm = this.fb.group({
       name: ['', [Validators.required]],
-      email: ['', [Validators.required, Validators.email]],
-      phone: ['', [Validators.required, Validators.pattern(/^\d{10}$/)]]
+      email: ['', [Validators.email]],
+      phone: ['', [Validators.required, Validators.pattern(/^\d{10}$/)]],
+      address: ['', [Validators.required]]
     });
 
     this.orderNotesForm = this.fb.group({
@@ -195,18 +201,62 @@ export class CreateOrderComponent implements OnInit {
   }
 
   selectPendant(pendant: Product): void {
+    // Find if the pendant is already in the selection
     const index = this.selectedPendants.findIndex(p => p._id === pendant._id);
+
     if (index >= 0) {
-      // If pendant is already selected, remove it
-      this.selectedPendants.splice(index, 1);
+      // Instead of removing it, increment its quantity
+      this.selectedPendants[index].quantity++;
     } else {
-      // Otherwise add it to selection
-      this.selectedPendants.push(pendant);
+      // Add the pendant with quantity 1
+      const pendantWithQuantity: PendantWithQuantity = {
+        ...pendant,
+        quantity: 1
+      };
+      this.selectedPendants.push(pendantWithQuantity);
     }
   }
 
   isPendantSelected(pendant: Product): boolean {
     return this.selectedPendants.some(p => p._id === pendant._id);
+  }
+
+  // Add a new method to get the pendant quantity
+  getPendantQuantity(pendant: Product): number {
+    const found = this.selectedPendants.find(p => p._id === pendant._id);
+    return found?.quantity || 0;
+  }
+
+  // Method to decrease pendant quantity
+  decreasePendantQuantity(pendant: Product, event: Event): void {
+    // Stop click event from propagating to parent (which would add quantity)
+    if (event) {
+      event.stopPropagation();
+    }
+
+    const index = this.selectedPendants.findIndex(p => p._id === pendant._id);
+    if (index >= 0) {
+      // If quantity is greater than 1, decrease it
+      if (this.selectedPendants[index].quantity > 1) {
+        this.selectedPendants[index].quantity--;
+      } else {
+        // If quantity is 1, remove the pendant from selection
+        this.selectedPendants.splice(index, 1);
+      }
+    }
+  }
+
+  // Add method to handle chain type changes
+  onChainTypeChange(type: string): void {
+    this.selectedChainType = type;
+
+    // Reset chain layer if not Chain type
+    if (type !== 'Chain') {
+      this.selectedChainLayer = '';
+    } else if (!this.selectedChainLayer) {
+      // Set default layer if it's Chain type and no layer is selected
+      this.selectedChainLayer = this.chainLayers[0];
+    }
   }
 
   selectChain(chain: Product): void {
@@ -234,65 +284,160 @@ export class CreateOrderComponent implements OnInit {
     }
   }
 
-  addComboToOrder(): void {
-    if (this.selectedPendants.length > 0 && this.selectedChain && this.selectedChainType && this.selectedChainSize && this.selectedChainLayer) {
-      // Calculate total pendant price
-      const totalPendantPrice = this.selectedPendants.reduce((sum, pendant) => sum + pendant.price, 0);
-      const comboPrice = this.selectedChain.price + totalPendantPrice;
+  // Calculate the price based on the fixed price structure
+  calculateCombinationPrice(): number {
+    // Count the total number of pendants (including quantities)
+    const pendantCount = this.selectedPendants.reduce((total, pendant) => {
+      return total + pendant.quantity;
+    }, 0);
 
-      // Create pendant names string - limit to first pendant name + count for better display
-      const pendantCount = this.selectedPendants.length;
-      const firstPendantName = this.selectedPendants[0].name;
-      const pendantNames = pendantCount === 1
-        ? firstPendantName
-        : `${firstPendantName} + ${pendantCount - 1} more`;
+    // Base price determined by type, layer, and pendant count
+    let basePrice = 0;
 
-      // Create a more concise name to avoid overflow
-      const comboName = `${this.selectedChainType} (${this.selectedChainSize}, ${this.selectedChainLayer} Layered): ${this.selectedChain.name} with ${pendantNames}`;
+    if (this.selectedChainType === 'Chain') {
+      // Chain pricing based on layer
+      if (this.selectedChainLayer === 'Single') {
+        // Single layered chain: Base price 100 for up to 1 pendant
+        basePrice = 100;
 
-      // Choose an image (prefer the first pendant's image if available)
-      const comboImage = this.selectedPendants[0]?.imageUrl || this.selectedChain.imageUrl;
+        // For each additional pendant beyond 1, add 50
+        if (pendantCount > 1) {
+          basePrice += (pendantCount - 1) * 50;
+        }
+      } else if (this.selectedChainLayer === 'Double') {
+        // Double layered chain: Base price 200 for up to 2 pendants
+        basePrice = 200;
 
-      // Create a virtual product for the combo
-      const comboProduct: Product = {
-        _id: `combo-${Date.now()}`,
-        name: comboName,
-        category: 'combination',
-        price: comboPrice,
-        description: `Combination of ${this.selectedChainType} (${this.selectedChainSize}, ${this.selectedChainLayer} Layered): ${this.selectedChain.name} and ${this.selectedPendants.map(p => p.name).join(', ')}`,
-        imageUrl: comboImage,
-        productCode: `COMBO-${Date.now()}`,
-        inStock: true,
-        stockQuantity: 1,
-        imageUrls: [],
-        details: {
-          material: '',
-          dimensions: '',
-          weight: '',
-          features: []
-        },
-        featured: false,
-        discount: {
-          percentage: 0,
-          validUntil: undefined
-        },
-        tags: []
-      };
+        // For each additional pendant beyond 2, add 50
+        if (pendantCount > 2) {
+          basePrice += (pendantCount - 2) * 50;
+        }
+      } else if (this.selectedChainLayer === 'Triple') {
+        // Triple layered chain: Base price 300 for up to 3 pendants
+        basePrice = 300;
 
-      this.orderItems.push({
-        product: comboProduct,
-        quantity: 1,
-        isCombo: true,
-        pendantProducts: [...this.selectedPendants],
-        chainProduct: this.selectedChain,
-        chainType: this.selectedChainType,
-        chainSize: this.selectedChainSize,
-        chainLayer: this.selectedChainLayer
-      });
+        // For each additional pendant beyond 3, add 50
+        if (pendantCount > 3) {
+          basePrice += (pendantCount - 3) * 50;
+        }
+      }
+    } else if (this.selectedChainType === 'Bracelet' || this.selectedChainType === 'Anklet') {
+      // Bracelet or Anklet pricing - base price 100 for 1 pendant
+      basePrice = 100;
 
-      this.closeComboModal();
-      this.updateOrderSummary();
+      // Add 50 for each additional pendant beyond 1
+      if (pendantCount > 1) {
+        basePrice += (pendantCount - 1) * 50;
+      }
     }
+
+    return basePrice;
+  }
+
+  addComboToOrder(): void {
+    // Only check for chain layer if chain type is 'Chain', otherwise it's not needed
+    const isChainLayerRequired = this.selectedChainType === 'Chain';
+    if (this.selectedPendants.length === 0 || !this.selectedChain || !this.selectedChainType || !this.selectedChainSize ||
+      (isChainLayerRequired && !this.selectedChainLayer)) {
+      return;
+    }
+
+    // Calculate base price - this is now just the jewelry price without additional charges
+    const basePrice = this.calculateCombinationPrice();
+
+    // Create pendant names string with quantities
+    const pendantsList = this.selectedPendants.map(pendant => {
+      return pendant.quantity > 1 ? `${pendant.name} (x${pendant.quantity})` : pendant.name;
+    });
+
+    const firstPendantName = pendantsList[0];
+    const pendantCount = this.selectedPendants.reduce((count, pendant) => {
+      return count + pendant.quantity;
+    }, 0);
+
+    // Create pendant names display string
+    const pendantNames = pendantsList.length === 1
+      ? firstPendantName
+      : `${firstPendantName} + ${pendantCount - 1} more`;
+
+    // Create a more concise name to avoid overflow
+    let comboName = '';
+    if (this.selectedChainType === 'Chain') {
+      comboName = `${this.selectedChainType} (${this.selectedChainSize}, ${this.selectedChainLayer} Layered): ${this.selectedChain.name} with ${pendantNames}`;
+    } else {
+      comboName = `${this.selectedChainType} (${this.selectedChainSize}): ${this.selectedChain.name} with ${pendantNames}`;
+    }
+
+    // Choose an image (prefer the first pendant's image if available)
+    const comboImage = this.selectedPendants[0]?.imageUrl || this.selectedChain.imageUrl;
+
+    // Count the pendants for price description
+    const pendantTotal = this.selectedPendants.reduce((total, pendant) => total + pendant.quantity, 0);
+
+    // Create description with price breakdown
+    let priceDescription = '';
+
+    if (this.selectedChainType === 'Chain') {
+      priceDescription = `${this.selectedChainLayer} layered chain with ${pendantTotal} pendant${pendantTotal > 1 ? 's' : ''}`;
+    } else {
+      priceDescription = `${this.selectedChainType} with ${pendantTotal} pendant${pendantTotal > 1 ? 's' : ''}`;
+    }
+
+    priceDescription += ` (Price: ₹${basePrice})`;
+
+    // Create a virtual product for the combo
+    const comboProduct: Product = {
+      _id: `combo-${Date.now()}`,
+      name: comboName,
+      category: 'combination',
+      price: basePrice,
+      description: priceDescription,
+      imageUrl: comboImage,
+      productCode: `COMBO-${Date.now()}`,
+      inStock: true,
+      stockQuantity: 1,
+      imageUrls: [],
+      details: {
+        material: '',
+        dimensions: '',
+        weight: '',
+        features: []
+      },
+      featured: false,
+      discount: {
+        percentage: 0,
+        validUntil: undefined
+      },
+      tags: []
+    };
+
+    // Create chain details object
+    const chainDetails: any = {
+      product: this.selectedChain,
+      type: this.selectedChainType,
+      size: this.selectedChainSize
+    };
+
+    // Only add layer info if it's a Chain type
+    if (this.selectedChainType === 'Chain') {
+      chainDetails.layer = this.selectedChainLayer;
+    }
+
+    this.orderItems.push({
+      product: comboProduct,
+      quantity: 1,
+      isCombo: true,
+      pendantProducts: [...this.selectedPendants],
+      chainProduct: this.selectedChain,
+      chainType: this.selectedChainType,
+      chainSize: this.selectedChainSize,
+      chainLayer: this.selectedChainLayer,
+      pendantCount: pendantTotal,
+      basePrice: basePrice
+    });
+
+    this.closeComboModal();
+    this.updateOrderSummary();
   }
 
   updateQuantity(index: number, amount: number): void {
@@ -311,17 +456,34 @@ export class CreateOrderComponent implements OnInit {
     this.updateOrderSummary();
   }
 
-  updateOrderSummary(): void {
-    // Calculate subtotal
-    this.subtotal = this.orderItems.reduce((total, item) => {
+  // Add this method to calculate items total
+  calculateItemsTotal(): number {
+    return this.orderItems.reduce((total, item) => {
       return total + (item.product.price * item.quantity);
     }, 0);
+  }
 
-    // Calculate tax (18% GST for jewelry in India)
-    this.tax = this.subtotal * 0.18;
+  updateOrderSummary(): void {
+    // Calculate subtotal (just the items)
+    const itemsTotal = this.calculateItemsTotal();
 
-    // Calculate total
-    this.total = this.subtotal + this.tax;
+    // Add fixed packing and delivery charges to get the total
+    // Only add these charges if there are items in the order
+    if (this.orderItems.length > 0) {
+      // Add one-time packing charge (₹15) for the entire order
+      const packingCharge = 15;
+
+      // Add one-time delivery charge (₹40) for the entire order
+      const deliveryCharge = 40;
+
+      // Total is just items + packing + delivery (no tax)
+      this.total = itemsTotal + packingCharge + deliveryCharge;
+    } else {
+      this.total = 0;
+    }
+
+    // Keep subtotal for order data tracking
+    this.subtotal = itemsTotal;
   }
 
   createOrder(): void {
@@ -381,6 +543,13 @@ export class CreateOrderComponent implements OnInit {
       return orderItem;
     });
 
+    // Calculate packing and delivery charges separately
+    const packingCharge = 15;
+    const deliveryCharge = 40;
+
+    // Calculate the product subtotal (without packing and delivery charges)
+    const productSubtotal = this.calculateItemsTotal();
+
     // Generate a user-friendly order ID: ORD-[timestamp in milliseconds]
     const friendlyOrderId = `ORD-${Date.now().toString().slice(-6)}`;
 
@@ -389,12 +558,14 @@ export class CreateOrderComponent implements OnInit {
       customer: {
         name: customerData.name,
         email: customerData.email,
-        phone: customerData.phone
+        phone: customerData.phone,
+        address: customerData.address // Add address to order data
       },
       items: formattedItems,
       status: 'confirmed' as OrderStatus,
-      subtotal: this.subtotal,
-      tax: this.tax,
+      subtotal: productSubtotal,
+      packingCharge: packingCharge,
+      deliveryCharge: deliveryCharge,
       totalAmount: this.total,
       shippingCost: 0,
       discount: 0,
@@ -527,4 +698,4 @@ export class CreateOrderComponent implements OnInit {
       chain.productCode.toLowerCase().includes(searchTerm)
     );
   }
-} 
+}

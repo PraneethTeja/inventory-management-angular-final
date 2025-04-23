@@ -23,7 +23,7 @@
           <h3>Your Information</h3>
           <form [formGroup]="customerForm" class="customer-form">
             <div class="form-group">
-              <label for="name">Name</label>
+              <label for="name">Name*</label>
               <input type="text" id="name" formControlName="name" class="form-input"
                 [class.is-invalid]="customerForm.get('name')?.invalid && customerForm.get('name')?.touched">
               <div *ngIf="customerForm.get('name')?.invalid && customerForm.get('name')?.touched" class="error-message">
@@ -36,17 +36,27 @@
                 [class.is-invalid]="customerForm.get('email')?.invalid && customerForm.get('email')?.touched">
               <div *ngIf="customerForm.get('email')?.invalid && customerForm.get('email')?.touched"
                 class="error-message">
-                Valid email is required
+                Please enter a valid email
               </div>
             </div>
             <div class="form-group">
-              <label for="phone">Phone</label>
+              <label for="phone">Phone*</label>
               <input type="tel" id="phone" formControlName="phone" class="form-input"
                 placeholder="10-digit mobile number"
                 [class.is-invalid]="customerForm.get('phone')?.invalid && customerForm.get('phone')?.touched">
               <div *ngIf="customerForm.get('phone')?.invalid && customerForm.get('phone')?.touched"
                 class="error-message">
                 Valid 10-digit phone number is required
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="address">Delivery Address*</label>
+              <textarea id="address" formControlName="address" class="form-input" rows="3"
+                [class.is-invalid]="customerForm.get('address')?.invalid && customerForm.get('address')?.touched"
+                placeholder="Enter your complete delivery address"></textarea>
+              <div *ngIf="customerForm.get('address')?.invalid && customerForm.get('address')?.touched"
+                class="error-message">
+                Delivery address is required
               </div>
             </div>
           </form>
@@ -85,19 +95,19 @@
       <div class="cart-summary">
         <h3>Order Summary</h3>
         <div class="summary-row">
-          <span>Subtotal</span>
+          <span>Items Total</span>
           <span>{{ subtotal | currency:'INR' }}</span>
         </div>
         <div class="summary-row">
-          <span>Shipping</span>
-          <span>{{ shipping | currency:'INR' }}</span>
+          <span>Packing Charge</span>
+          <span>₹15.00</span>
         </div>
         <div class="summary-row">
-          <span>Tax (18%)</span>
-          <span>{{ tax | currency:'INR' }}</span>
+          <span>Delivery Charge</span>
+          <span>₹40.00</span>
         </div>
         <div class="summary-row total">
-          <span>Total</span>
+          <span>Total Amount</span>
           <span>{{ total | currency:'INR' }}</span>
         </div>
         <button [disabled]="customerForm.invalid" (click)="proceedToWhatsAppCheckout()" class="checkout-btn">

@@ -1,0 +1,459 @@
+/* Responsive Styles for Create Combination Redesign */
+
+// Media query mixins for consistent breakpoints
+@mixin mobile {
+  @media (max-width: 576px) {
+    @content;
+  }
+}
+
+@mixin tablet {
+  @media (min-width: 577px) and (max-width: 991px) {
+    @content;
+  }
+}
+
+@mixin desktop {
+  @media (min-width: 992px) {
+    @content;
+  }
+}
+
+/* General Responsive Adjustments */
+.combination-experience {
+  padding: 0;
+  
+  @include tablet {
+    padding: 0;
+  }
+  
+  @include mobile {
+    padding: 0;
+  }
+  
+  /* Hero Section Responsive */
+  .hero-section {
+    min-height: 400px;
+    
+    @include tablet {
+      min-height: 350px;
+    }
+    
+    @include mobile {
+      min-height: 280px;
+      
+      .hero-content {
+        width: 100%;
+        padding: 0 1rem;
+        
+        .hero-title {
+          font-size: 1.8rem;
+        }
+        
+        .hero-subtitle {
+          font-size: 1rem;
+          max-width: 100%;
+        }
+      }
+      
+      .scroll-prompt {
+        bottom: 15px;
+      }
+    }
+  }
+  
+  /* Main Container Responsive */
+  .main-container {
+    padding: 2rem;
+    
+    @include tablet {
+      padding: 1.5rem;
+    }
+    
+    @include mobile {
+      padding: 1rem;
+    }
+    
+    /* Status Messages */
+    .loading-indicator, .error-message, .success-message {
+      width: 90%;
+      max-width: 500px;
+      margin: 2rem auto;
+      
+      @include mobile {
+        width: 95%;
+        margin: 1rem auto;
+      }
+    }
+  }
+  
+  /* Design Process Steps */
+  .design-process {
+    margin-bottom: 2.5rem;
+    
+    @include tablet {
+      margin-bottom: 2rem;
+    }
+    
+    @include mobile {
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      
+      .step {
+        width: 80px;
+        margin-bottom: 0.5rem;
+        
+        .step-number {
+          width: 30px;
+          height: 30px;
+          font-size: 0.9rem;
+        }
+        
+        .step-label {
+          font-size: 0.75rem;
+        }
+      }
+      
+      .step-divider {
+        width: 20px;
+        
+        &:last-of-type {
+          display: none;
+        }
+      }
+    }
+  }
+  
+  /* Designer Interface */
+  .designer-container {
+    flex-direction: row;
+    
+    @include tablet {
+      flex-direction: column;
+      
+      .selection-panel {
+        width: 100%;
+        margin-right: 0;
+        margin-bottom: 1.5rem;
+      }
+      
+      .preview-panel {
+        width: 100%;
+      }
+    }
+    
+    @include mobile {
+      flex-direction: column;
+      
+      .selection-panel {
+        width: 100%;
+        margin-right: 0;
+        margin-bottom: 1rem;
+        
+        .panel-header {
+          padding: 0.75rem 1rem;
+          font-size: 1rem;
+        }
+        
+        .panel-content {
+          padding: 1rem;
+        }
+      }
+      
+      .preview-panel {
+        width: 100%;
+        
+        .preview-header {
+          padding: 0.75rem 1rem;
+          font-size: 1rem;
+        }
+        
+        .preview-container {
+          padding: 1rem;
+          min-height: 200px;
+        }
+        
+        .preview-details {
+          padding: 1rem;
+        }
+      }
+    }
+  }
+  
+  /* Item Grid Responsive */
+  .item-grid {
+    grid-template-columns: repeat(4, 1fr);
+    
+    @include tablet {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.25rem;
+    }
+    
+    @include mobile {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+      max-height: 300px;
+      
+      .grid-item {
+        .item-details {
+          padding: 0.75rem;
+          
+          h3 {
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+            -webkit-line-clamp: 1;
+          }
+          
+          .item-price {
+            font-size: 1rem;
+            margin: 0.25rem 0;
+          }
+          
+          .item-description {
+            font-size: 0.8rem;
+            margin-bottom: 0.5rem;
+            -webkit-line-clamp: 1;
+          }
+        }
+        
+        .add-button {
+          padding: 0.5rem;
+          font-size: 0.8rem;
+          
+          .icon {
+            font-size: 1rem;
+          }
+        }
+      }
+    }
+  }
+  
+  /* Selection Controls Responsive */
+  .selection-controls {
+    flex-wrap: wrap;
+    
+    @include mobile {
+      margin-bottom: 0.75rem;
+      
+      .control-group {
+        margin-bottom: 0.5rem;
+        width: 100%;
+        justify-content: center;
+        
+        .option-button {
+          padding: 0.35rem 0.6rem;
+          font-size: 0.8rem;
+        }
+      }
+    }
+  }
+  
+  /* Search Box Responsive */
+  .search-box {
+    @include mobile {
+      margin-bottom: 0.75rem;
+      
+      input {
+        padding: 0.6rem 2.4rem 0.6rem 0.8rem;
+        font-size: 0.85rem;
+      }
+      
+      .clear-button {
+        width: 24px;
+        height: 24px;
+        right: 8px;
+        font-size: 0.8rem;
+      }
+    }
+  }
+  
+  /* Size Guide Responsive */
+  .size-guide {
+    @include mobile {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.8rem;
+      margin-bottom: 0.75rem;
+      
+      .guide-icon {
+        font-size: 0.9rem;
+      }
+    }
+  }
+  
+  /* Layer Indicators Responsive */
+  .layer-indicators {
+    @include mobile {
+      flex-wrap: wrap;
+      
+      .layer-indicator {
+        padding: 0.3rem 0.5rem;
+        margin-right: 0.5rem;
+        margin-bottom: 0.5rem;
+        font-size: 0.75rem;
+      }
+    }
+  }
+  
+  /* Preview Panel Responsive */
+  .price-summary {
+    @include mobile {
+      padding: 0.75rem;
+      
+      .price-row {
+        font-size: 0.85rem;
+        
+        &.total {
+          font-size: 1rem;
+        }
+      }
+    }
+  }
+  
+  /* Bottom Buttons Responsive */
+  .add-to-cart-button {
+    @include mobile {
+      padding: 0.7rem;
+      font-size: 0.9rem;
+      
+      .icon {
+        font-size: 1.1rem;
+      }
+    }
+  }
+  
+  /* Back Button Responsive */
+  .back-button {
+    @include mobile {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.8rem;
+      
+      .icon {
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  /* Design Inspiration Section Responsive */
+  .design-inspiration {
+    margin: 3rem 0;
+    padding: 2rem;
+    
+    @include tablet {
+      margin: 2rem 0;
+      padding: 1.5rem;
+    }
+    
+    @include mobile {
+      margin: 1.5rem 0;
+      padding: 1rem;
+      
+      .inspiration-title {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+      }
+      
+      .inspiration-features {
+        gap: 1rem;
+        
+        .feature {
+          width: calc(50% - 0.5rem);
+          padding: 1rem;
+          
+          .feature-icon {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+          }
+          
+          .feature-title {
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+          }
+          
+          .feature-description {
+            font-size: 0.8rem;
+          }
+        }
+      }
+    }
+  }
+}
+
+/* Responsive Navbar */
+.header-navbar {
+  padding: 0.75rem 2rem;
+  
+  @include tablet {
+    padding: 0.75rem 1.5rem;
+  }
+  
+  @include mobile {
+    padding: 0.5rem 1rem;
+    
+    .logo {
+      font-size: 1.25rem;
+      
+      img {
+        height: 30px;
+      }
+    }
+    
+    .nav-links {
+      .nav-link {
+        font-size: 0.85rem;
+        margin-left: 0.75rem;
+        
+        &.active::after {
+          height: 2px;
+        }
+      }
+    }
+    
+    .cart-icon {
+      font-size: 1.25rem;
+      
+      .cart-count {
+        width: 18px;
+        height: 18px;
+        font-size: 0.7rem;
+        top: -5px;
+        right: -5px;
+      }
+    }
+  }
+}
+
+/* Portrait Mobile Specific Adjustments */
+@media (max-width: 380px) {
+  .combination-experience {
+    .hero-section {
+      min-height: 240px;
+      
+      .hero-content {
+        .hero-title {
+          font-size: 1.6rem;
+        }
+        
+        .hero-subtitle {
+          font-size: 0.9rem;
+        }
+      }
+    }
+    
+    .designer-container {
+      .item-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    .design-inspiration {
+      .inspiration-features {
+        flex-direction: column;
+        
+        .feature {
+          width: 100%;
+        }
+      }
+    }
+  }
+} 

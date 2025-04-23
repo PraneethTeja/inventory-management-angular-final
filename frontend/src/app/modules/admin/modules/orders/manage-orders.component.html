@@ -88,7 +88,7 @@
             </div>
           </td>
           <td>{{ order.date | date:'medium' }}</td>
-          <td>₹{{ order.totalAmount.toFixed(2) }}</td>
+          <td>{{ order.totalAmount | currency:'INR':'symbol':'1.2-2' }}</td>
           <td>
             <span class="status-badge" [ngClass]="getStatusClass(order.status)">
               {{ order.status }}
@@ -123,6 +123,13 @@
     <p>We couldn't find any orders matching your filters. Try adjusting your search criteria.</p>
     <button (click)="statusFilter = 'all'; dateFilter = 'all'; searchTerm = ''; applyFilters();">Reset Filters</button>
   </div>
+
+  <!-- Debug info
+  <div *ngIf="!isLoading" style="margin-bottom: 10px; text-align: center; color: #616161; font-size: 12px;">
+    Debug: Total Pages = {{ totalPages }}, Current Page = {{ currentPage }}, Total Count = {{ totalCount }}
+    <button (click)="testPagination()" style="margin-left: 10px; font-size: 12px; padding: 2px 5px;">Test
+      Pagination</button>
+  </div> -->
 
   <div class="pagination" *ngIf="!isLoading && totalPages > 1">
     <button class="prev-btn" [disabled]="currentPage === 1" (click)="changePage(currentPage - 1)" title="Previous Page">
@@ -250,9 +257,9 @@
                       <div class="product-category">{{ item.category | titlecase }}</div>
                     </div>
                   </td>
-                  <td>₹{{ item.price.toFixed(2) }}</td>
+                  <td>{{ item.price | currency:'INR':'symbol':'1.2-2' }}</td>
                   <td>{{ item.quantity }}</td>
-                  <td>₹{{ (item.price * item.quantity).toFixed(2) }}</td>
+                  <td>{{ item.price * item.quantity | currency:'INR':'symbol':'1.2-2' }}</td>
                 </tr>
               </tbody>
             </table>
@@ -264,15 +271,15 @@
           <div class="order-summary">
             <div class="summary-row">
               <div>Subtotal</div>
-              <div>₹{{ selectedOrder.subtotal.toFixed(2) }}</div>
+              <div>{{ selectedOrder.subtotal | currency:'INR':'symbol':'1.2-2' }}</div>
             </div>
             <div class="summary-row">
               <div>Tax (18% GST)</div>
-              <div>₹{{ selectedOrder.tax.toFixed(2) }}</div>
+              <div>{{ selectedOrder.tax | currency:'INR':'symbol':'1.2-2' }}</div>
             </div>
             <div class="summary-row total">
               <div>Total</div>
-              <div>₹{{ selectedOrder.totalAmount.toFixed(2) }}</div>
+              <div>{{ selectedOrder.totalAmount | currency:'INR':'symbol':'1.2-2' }}</div>
             </div>
           </div>
         </div>
@@ -382,7 +389,7 @@
                   <td>
                     <input type="number" [(ngModel)]="item.quantity" min="1" style="width: 60px;">
                   </td>
-                  <td>₹{{ (item.price * item.quantity).toFixed(2) }}</td>
+                  <td>{{ item.price * item.quantity | currency:'INR':'symbol':'1.2-2' }}</td>
                 </tr>
               </tbody>
             </table>
@@ -394,15 +401,15 @@
           <div class="order-summary">
             <div class="summary-row">
               <div>Subtotal</div>
-              <div>₹{{ calculateTotal(editedOrder).toFixed(2) }}</div>
+              <div>{{ calculateTotal(editedOrder) | currency:'INR':'symbol':'1.2-2' }}</div>
             </div>
             <div class="summary-row">
               <div>Tax (18% GST)</div>
-              <div>₹{{ (calculateTotal(editedOrder) * 0.18).toFixed(2) }}</div>
+              <div>{{ calculateTotal(editedOrder) * 0.18 | currency:'INR':'symbol':'1.2-2' }}</div>
             </div>
             <div class="summary-row total">
               <div>Total</div>
-              <div>₹{{ (calculateTotal(editedOrder) * 1.18).toFixed(2) }}</div>
+              <div>{{ calculateTotal(editedOrder) * 1.18 | currency:'INR':'symbol':'1.2-2' }}</div>
             </div>
           </div>
         </div>

@@ -431,16 +431,22 @@ body, html {
       transition: transform 0.5s ease;
     }
     
-    .discount-badge {
+    .featured-badge {
       position: absolute;
       top: 10px;
       right: 10px;
-      background-color: var(--primary);
+      background-color: #7f2257;
       color: white;
       padding: 5px 10px;
       border-radius: 8px;
       font-size: 0.8rem;
       font-weight: 500;
+      display: flex;
+      align-items: center;
+      
+      i {
+        margin-right: 5px;
+      }
     }
     
     .stock-badge {
@@ -453,12 +459,12 @@ body, html {
       font-weight: 500;
       
       &.out-of-stock {
-        background-color: var(--error);
+        background-color: #e53935;
         color: white;
       }
       
       &.low-stock {
-        background-color: var(--warning);
+        background-color: #ff9800;
         color: white;
       }
     }

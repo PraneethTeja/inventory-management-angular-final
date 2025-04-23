@@ -62,22 +62,25 @@
         </div>
       </div>
 
-      <div class="row gx-4 gy-5">
-        <!-- Left column - Chain selection -->
-        <div class="col-lg-6">
-          <div class="selection-card">
+      <!-- Main container with custom layout classes -->
+      <div class="custom-layout-container">
+        <!-- Selection column - left side with chain and pendant cards -->
+        <div class="selections-column">
+          <!-- Chain selection card -->
+          <div class="selection-card mb-4">
             <div class="selection-card-header">
               <h3><i class="bi bi-link me-2"></i>Step 1: Choose Your Chain</h3>
             </div>
             <div class="selection-card-body">
               <!-- Chain search -->
               <div class="search-container mb-4">
-                <div class="search-box">
-                  <div class="input-group">
-                    <span class="input-group-text bg-transparent border-end-0"><i class="bi bi-search"></i></span>
-                    <input type="text" class="form-control border-start-0" placeholder="Search chains..."
-                      [(ngModel)]="chainSearchTerm" (keyup)="filterChains()">
-                  </div>
+                <div class="modern-search-box">
+                  <i class="bi bi-search search-icon"></i>
+                  <input type="text" class="search-input" placeholder="Search chains by name or code..."
+                    [(ngModel)]="chainSearchTerm" (keyup)="filterChains()">
+                  <button *ngIf="chainSearchTerm" class="clear-btn" (click)="clearChainSearch($event)">
+                    <i class="bi bi-x-circle-fill"></i>
+                  </button>
                 </div>
               </div>
 
@@ -86,7 +89,7 @@
                 <label class="form-label fw-bold">Chain Type:</label>
                 <div class="chain-type-buttons">
                   <button *ngFor="let type of chainTypes" [class.active]="selectedChainType === type" class="btn-type"
-                    (click)="selectedChainType = type">
+                    (click)="onChainTypeChange(type)">
                     {{type}}
                   </button>
                 </div>
@@ -95,6 +98,17 @@
               <!-- Chain size selection -->
               <div class="mb-4">
                 <label class="form-label fw-bold">Chain Size:</label>
+                <div class="size-info">
+                  <small *ngIf="selectedChainType === 'Chain'">
+                    Small: 16-18 inches | Medium: 18-20 inches | Large: 20-22 inches
+                  </small>
+                  <small *ngIf="selectedChainType === 'Bracelet'">
+                    Small: 6-7 inches | Medium: 7-8 inches | Large: 8-9 inches
+                  </small>
+                  <small *ngIf="selectedChainType === 'Anklet'">
+                    Small: 8-9 inches | Medium: 9-10 inches | Large: 10-11 inches
+                  </small>
+                </div>
                 <div class="chain-size-buttons">
                   <button *ngFor="let size of chainSizes" [class.active]="selectedChainSize === size" class="btn-size"
                     (click)="selectedChainSize = size">
@@ -103,8 +117,8 @@
                 </div>
               </div>
 
-              <!-- Chain layer selection -->
-              <div class="mb-4">
+              <!-- Chain layer selection (only visible for Chain type) -->
+              <div class="mb-4" *ngIf="selectedChainType === 'Chain'">
                 <label class="form-label fw-bold">Chain Layer:</label>
                 <div class="chain-layer-buttons">
                   <button *ngFor="let layer of chainLayers" [class.active]="selectedChainLayer === layer"
@@ -126,12 +140,7 @@
                   </div>
                   <div class="product-info">
                     <h5 class="product-name">{{chain.name}}</h5>
-                    <div class="price-area">
-                      <span class="current-price">{{chain.price | currency}}</span>
-                      <span *ngIf="chain.discount && chain.discount.percentage > 0" class="original-price">
-                        {{chain.price | currency}}
-                      </span>
-                    </div>
+                    <div *ngIf="selectedChain?._id === chain._id" class="selection-status">Selected</div>
                   </div>
                   <div class="selection-indicator">
                     <i class="bi bi-check-circle-fill"></i>
@@ -140,10 +149,8 @@
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- Right column - Pendant selection -->
-        <div class="col-lg-6">
+          <!-- Pendant selection card -->
           <div class="selection-card">
             <div class="selection-card-header">
               <h3><i class="bi bi-gem me-2"></i>Step 2: Choose Your Pendants</h3>
@@ -151,12 +158,13 @@
             <div class="selection-card-body">
               <!-- Pendant search -->
               <div class="search-container mb-4">
-                <div class="search-box">
-                  <div class="input-group">
-                    <span class="input-group-text bg-transparent border-end-0"><i class="bi bi-search"></i></span>
-                    <input type="text" class="form-control border-start-0" placeholder="Search pendants..."
-                      [(ngModel)]="pendantSearchTerm" (keyup)="filterPendants()">
-                  </div>
+                <div class="modern-search-box">
+                  <i class="bi bi-search search-icon"></i>
+                  <input type="text" class="search-input" placeholder="Search pendants by name or code..."
+                    [(ngModel)]="pendantSearchTerm" (keyup)="filterPendants()">
+                  <button *ngIf="pendantSearchTerm" class="clear-btn" (click)="clearPendantSearch($event)">
+                    <i class="bi bi-x-circle-fill"></i>
+                  </button>
                 </div>
               </div>
 
@@ -167,10 +175,11 @@
                 </div>
                 <div class="selected-items-tags">
                   <div *ngFor="let pendant of selectedPendants" class="selected-tag">
-                    <span>{{pendant.name}}</span>
+                    <span>{{pendant.name}} <span *ngIf="pendant.quantity > 1">(x{{pendant.quantity}})</span></span>
                     <button type="button" class="btn-remove" (click)="selectPendant(pendant)">×</button>
                   </div>
                 </div>
+
               </div>
 
               <!-- Pendant list -->
@@ -182,14 +191,20 @@
                     <div *ngIf="pendant.discount && pendant.discount.percentage > 0" class="discount-badge">
                       {{pendant.discount.percentage}}% OFF
                     </div>
+                    <div *ngIf="getPendantQuantity(pendant) > 0" class="quantity-control">
+                      <button class="qty-btn decrease" (click)="decreasePendantQuantity(pendant, $event)">
+                        <i class="bi bi-dash"></i>
+                      </button>
+                      <span class="qty-value">{{getPendantQuantity(pendant)}}</span>
+                      <button class="qty-btn increase" (click)="incrementPendantQuantity(pendant, $event)">
+                        <i class="bi bi-plus"></i>
+                      </button>
+                    </div>
                   </div>
                   <div class="product-info">
                     <h5 class="product-name">{{pendant.name}}</h5>
-                    <div class="price-area">
-                      <span class="current-price">{{pendant.price | currency}}</span>
-                      <span *ngIf="pendant.discount && pendant.discount.percentage > 0" class="original-price">
-                        {{pendant.price | currency}}
-                      </span>
+                    <div *ngIf="isPendantSelected(pendant)" class="selection-status">
+                      Selected × {{getPendantQuantity(pendant)}}
                     </div>
                   </div>
                   <div class="selection-indicator">
@@ -200,86 +215,97 @@
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- Summary and Add to Cart -->
-      <div class="row mt-5">
-        <div class="col-lg-10 offset-lg-1">
-          <div class="summary-card">
+        <!-- Summary column - right side with combination preview -->
+        <div class="summary-column">
+          <div class="summary-card sticky-summary">
             <div class="summary-card-header">
               <h3><i class="bi bi-stars me-2"></i>Your Custom Combination</h3>
             </div>
             <div class="summary-card-body">
-              <div class="row">
-                <div class="col-md-6">
-                  <h4 class="summary-section-title">Selected Items</h4>
-                  <div class="selected-items-list">
-                    <div *ngIf="selectedChain" class="selected-item">
+              <div>
+                <h4 class="summary-section-title">Selected Items</h4>
+                <div class="selected-items-list">
+                  <div *ngIf="selectedChain" class="selected-item">
+                    <div class="selected-item-image">
+                      <img [src]="selectedChain.imageUrl" alt="{{selectedChain.name}}">
+                    </div>
+                    <div class="selected-item-details">
+                      <h5>{{selectedChain.name}}</h5>
+                      <p class="selected-item-type">
+                        <span class="badge bg-secondary me-2">{{selectedChainType || 'Chain'}}</span>
+                        <span class="badge bg-secondary me-2">{{selectedChainSize || 'Medium'}}</span>
+                        <span *ngIf="selectedChainLayer && selectedChainType === 'Chain'"
+                          class="badge bg-secondary">{{selectedChainLayer}}
+                          Layered</span>
+                      </p>
+                      <p class="selected-item-price">{{selectedChain.price | currency}}</p>
+                    </div>
+                  </div>
+
+                  <div *ngIf="!selectedChain" class="empty-selection">
+                    <i class="bi bi-link-45deg"></i>
+                    <p>No chain selected</p>
+                  </div>
+
+                  <div class="selected-items-divider">
+                    <span>Pendants</span>
+                  </div>
+
+                  <div *ngIf="selectedPendants.length > 0" class="selected-pendants">
+                    <div *ngFor="let pendant of selectedPendants" class="selected-item">
                       <div class="selected-item-image">
-                        <img [src]="selectedChain.imageUrl" alt="{{selectedChain.name}}">
+                        <img [src]="pendant.imageUrl" alt="{{pendant.name}}">
                       </div>
                       <div class="selected-item-details">
-                        <h5>{{selectedChain.name}}</h5>
-                        <p class="selected-item-type">
-                          {{selectedChainType}} ({{selectedChainSize}})
-                          <span *ngIf="selectedChainLayer"> - {{selectedChainLayer}} Layered</span>
-                        </p>
-                        <p class="selected-item-price">{{selectedChain.price | currency}}</p>
+                        <h5>{{pendant.name}}</h5>
+                        <p *ngIf="pendant.quantity > 1" class="selected-item-qty">Quantity: {{pendant.quantity}}</p>
+                        <p class="selected-item-price">{{pendant.price * pendant.quantity | currency}}</p>
                       </div>
-                    </div>
-
-                    <div *ngIf="!selectedChain" class="empty-selection">
-                      <i class="bi bi-link-45deg"></i>
-                      <p>No chain selected</p>
-                    </div>
-
-                    <div class="selected-items-divider">
-                      <span>Pendants</span>
-                    </div>
-
-                    <div *ngIf="selectedPendants.length > 0" class="selected-pendants">
-                      <div *ngFor="let pendant of selectedPendants" class="selected-item">
-                        <div class="selected-item-image">
-                          <img [src]="pendant.imageUrl" alt="{{pendant.name}}">
-                        </div>
-                        <div class="selected-item-details">
-                          <h5>{{pendant.name}}</h5>
-                          <p class="selected-item-price">{{pendant.price | currency}}</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div *ngIf="selectedPendants.length === 0" class="empty-selection">
-                      <i class="bi bi-gem"></i>
-                      <p>No pendants selected</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="col-md-6">
-                  <h4 class="summary-section-title">Price Summary</h4>
-                  <div class="price-summary">
-                    <div class="price-row">
-                      <span>Chain Price</span>
-                      <span>{{(selectedChain?.price || 0) | currency}}</span>
-                    </div>
-                    <div class="price-row">
-                      <span>Pendants ({{selectedPendants.length}} item<span
-                          *ngIf="selectedPendants.length !== 1">s</span>)</span>
-                      <span>{{getTotalPendantPrice() | currency}}</span>
-                    </div>
-                    <div class="price-row total">
-                      <span>Total</span>
-                      <span>{{getTotalPrice() | currency}}</span>
                     </div>
                   </div>
 
-                  <button class="add-to-cart-btn"
-                    [disabled]="selectedPendants.length === 0 || !selectedChain || !selectedChainType || !selectedChainSize"
-                    (click)="addToCart()">
-                    <i class="bi bi-cart-plus me-2"></i> Add Combination to Cart
-                  </button>
+                  <div *ngIf="selectedPendants.length === 0" class="empty-selection">
+                    <i class="bi bi-gem"></i>
+                    <p>No pendants selected</p>
+                  </div>
                 </div>
+              </div>
+
+              <div class="mt-4">
+                <h4 class="summary-section-title">Price Summary</h4>
+                <div class="price-summary">
+                  <div class="price-row">
+                    <span>Combination Price</span>
+                    <span>₹{{ calculateCombinationPrice() }}</span>
+                  </div>
+                  <div *ngIf="selectedChainType === 'Chain'" class="price-info">
+                    <small>
+                      {{ selectedChainLayer }} layered chain with
+                      {{ getTotalPendantCount() }}
+                      pendant{{ getPendantSuffix() }}
+                    </small>
+                  </div>
+                  <div *ngIf="selectedChainType === 'Bracelet' || selectedChainType === 'Anklet'" class="price-info">
+                    <small>
+                      {{ selectedChainType }} with
+                      {{ getTotalPendantCount() }}
+                      pendant{{ getPendantSuffix() }}
+                    </small>
+                  </div>
+                  <div class="price-row small-text">
+                    <small>Note: Packing (₹15) and delivery (₹40) charges will be added during checkout</small>
+                  </div>
+                  <div class="price-row total">
+                    <span>Total</span>
+                    <span>₹{{ getTotalPrice() }}</span>
+                  </div>
+                </div>
+
+                <button class="add-to-cart-btn" [disabled]="selectedPendants.length === 0 || !selectedChain || !selectedChainType || !selectedChainSize || 
+                              (selectedChainType === 'Chain' && !selectedChainLayer)" (click)="addToCart()">
+                  <i class="bi bi-cart-plus me-2"></i> Add Combination to Cart
+                </button>
               </div>
             </div>
           </div>

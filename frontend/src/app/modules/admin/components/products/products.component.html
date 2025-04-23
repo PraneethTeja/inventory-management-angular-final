@@ -7,27 +7,31 @@
     </button>
   </div>
 
-  <!-- Category Filter -->
-  <div class="category-filter">
-    <div class="filter-label">Filter by Category:</div>
-    <div class="category-buttons">
-      <button *ngFor="let category of categories" [class.active]="selectedCategory === category"
-        (click)="onCategoryChange(category)">
-        {{ getCategoryLabel(category) }}
-      </button>
+  <!-- Filters Row - Combined Category and Search Filters -->
+  <div class="filters-row">
+    <!-- Category Filter -->
+    <div class="category-filter">
+      <div class="filter-label">Filter by Category:</div>
+      <div class="category-buttons">
+        <button *ngFor="let category of categories" [class.active]="selectedCategory === category"
+          (click)="onCategoryChange(category)">
+          {{ getCategoryLabel(category) }}
+        </button>
+      </div>
     </div>
-  </div>
 
-  <!-- Search Filter -->
-  <div class="search-filter">
-    <div class="search-input-container">
-      <input type="text" placeholder="Search by name or product code" [(ngModel)]="searchTerm" (keyup)="applySearch()">
-      <button class="search-button" (click)="applySearch()">
-        <i class="material-icons">search</i>
-      </button>
-      <button class="clear-button" *ngIf="searchTerm" (click)="clearSearch()">
-        <i class="material-icons">close</i>
-      </button>
+    <!-- Search Filter -->
+    <div class="search-filter">
+      <div class="search-input-container">
+        <input type="text" placeholder="Search by name or product code" [(ngModel)]="searchTerm"
+          (keyup)="applySearch()">
+        <button class="search-button" (click)="applySearch()">
+          <i class="material-icons">search</i>
+        </button>
+        <button class="clear-button" *ngIf="searchTerm" (click)="clearSearch()">
+          <i class="material-icons">close</i>
+        </button>
+      </div>
     </div>
   </div>
 
@@ -45,8 +49,8 @@
     <div class="product-card" *ngFor="let product of filteredProducts">
       <div class="product-image">
         <img [src]="product.imageUrl" [alt]="product.name">
-        <span class="discount-badge" *ngIf="product.discount.percentage > 0">
-          {{ getDiscountBadge(product) }}
+        <span class="featured-badge prominent" *ngIf="product.featured">
+          <i class="material-icons">star</i> Featured
         </span>
         <span class="stock-badge" [class.out-of-stock]="!product.inStock">
           {{ product.inStock ? 'In Stock' : 'Out of Stock' }}
@@ -59,16 +63,17 @@
           <span class="code">Code: {{ product.productCode }}</span>
         </div>
         <div class="product-pricing">
-          <span class="price" [class.has-discount]="product.discount.percentage > 0">
+          <span class="price" [class.has-discount]="product.discount.percentage > 0"
+            *ngIf="product.category !== 'pendant' && product.category !== 'chain'">
             ₹{{ product.price }}
           </span>
-          <span class="discounted-price" *ngIf="product.discount.percentage > 0">
+          <span class="discounted-price"
+            *ngIf="product.discount.percentage > 0 && product.category !== 'pendant' && product.category !== 'chain'">
             ₹{{ product.discountedPrice | number:'1.2-2' }}
           </span>
         </div>
         <div class="stock-info">
-          <span class="stock-quantity">Stock: {{ product.stockQuantity }}</span>
-          <span class="featured-badge" *ngIf="product.featured">Featured</span>
+          <span class="stock-quantity" *ngIf="product.category !== 'chain'">Stock: {{ product.stockQuantity }}</span>
         </div>
       </div>
       <div class="product-actions">
@@ -125,14 +130,6 @@
             </div>
 
             <div class="form-group">
-              <label for="price">Price (₹)*</label>
-              <input type="number" id="price" formControlName="price" min="0" step="0.01">
-              <div class="error-hint" *ngIf="productForm.get('price')?.invalid && productForm.get('price')?.touched">
-                Price must be a positive number
-              </div>
-            </div>
-
-            <div class="form-group">
               <label for="productCode">Product Code*</label>
               <input type="text" id="productCode" formControlName="productCode" placeholder="e.g., JW-C001">
               <div class="error-hint"
@@ -147,66 +144,31 @@
             </div>
 
             <div class="form-group">
-              <label for="imageUrl">Image URL (optional)</label>
+              <label for="imageUrl">Image URL</label>
               <input type="text" id="imageUrl" formControlName="imageUrl" placeholder="https://example.com/image.jpg">
             </div>
 
+            <div formGroupName="details" class="form-group">
+              <label for="material">Material</label>
+              <input type="text" id="material" formControlName="material" placeholder="e.g., Gold, Silver">
+            </div>
+
             <div class="form-group full-width">
-              <label for="description">Description*</label>
+              <label for="description">Description</label>
               <textarea id="description" formControlName="description" rows="4"
                 placeholder="Detailed product description"></textarea>
-              <div class="error-hint"
-                *ngIf="productForm.get('description')?.invalid && productForm.get('description')?.touched">
-                Description is required
-              </div>
             </div>
 
-            <div class="form-group">
+            <div class="form-group featured-toggle-container">
               <label for="featured">Featured Product</label>
-              <div class="toggle-switch">
+              <div class="featured-toggle">
                 <input type="checkbox" id="featured" formControlName="featured">
-                <label for="featured" class="toggle-label"></label>
+                <label for="featured" class="toggle-label">
+                  <span class="slider"></span>
+                  <span class="toggle-text">No</span>
+                  <span class="toggle-text">Yes</span>
+                </label>
               </div>
-            </div>
-
-            <div formGroupName="discount" class="discount-group">
-              <div class="form-group">
-                <label for="percentage">Discount Percentage (%)</label>
-                <input type="number" id="percentage" formControlName="percentage" min="0" max="100">
-              </div>
-
-              <div class="form-group">
-                <label for="validUntil">Valid Until</label>
-                <input type="date" id="validUntil" formControlName="validUntil">
-              </div>
-            </div>
-
-            <div formGroupName="details" class="form-group">
-              <div class="form-group">
-                <label for="material">Material</label>
-                <input type="text" id="material" formControlName="material" placeholder="e.g., Gold, Silver">
-              </div>
-
-              <div class="form-group">
-                <label for="weight">Weight</label>
-                <input type="text" id="weight" formControlName="weight" placeholder="e.g., 5g">
-              </div>
-
-              <div class="form-group">
-                <label for="dimensions">Dimensions</label>
-                <input type="text" id="dimensions" formControlName="dimensions" placeholder="e.g., 20cm length">
-              </div>
-
-              <div class="form-group">
-                <label for="features">Features (comma-separated)</label>
-                <input type="text" id="features" formControlName="features"
-                  placeholder="e.g., Waterproof, Hypoallergenic">
-              </div>
-            </div>
-
-            <div class="form-group full-width">
-              <label for="tags">Tags (comma-separated)</label>
-              <input type="text" id="tags" formControlName="tags" placeholder="e.g., wedding, gift, party">
             </div>
           </div>
 
@@ -250,14 +212,6 @@
             </div>
 
             <div class="form-group">
-              <label for="edit-price">Price (₹)*</label>
-              <input type="number" id="edit-price" formControlName="price" min="0" step="0.01">
-              <div class="error-hint" *ngIf="productForm.get('price')?.invalid && productForm.get('price')?.touched">
-                Price must be a positive number
-              </div>
-            </div>
-
-            <div class="form-group">
               <label for="edit-productCode">Product Code*</label>
               <input type="text" id="edit-productCode" formControlName="productCode" placeholder="e.g., JW-C001">
               <div class="error-hint"
@@ -272,67 +226,32 @@
             </div>
 
             <div class="form-group">
-              <label for="edit-imageUrl">Image URL (optional)</label>
+              <label for="edit-imageUrl">Image URL</label>
               <input type="text" id="edit-imageUrl" formControlName="imageUrl"
                 placeholder="https://example.com/image.jpg">
             </div>
 
+            <div formGroupName="details" class="form-group">
+              <label for="edit-material">Material</label>
+              <input type="text" id="edit-material" formControlName="material" placeholder="e.g., Gold, Silver">
+            </div>
+
             <div class="form-group full-width">
-              <label for="edit-description">Description*</label>
+              <label for="edit-description">Description</label>
               <textarea id="edit-description" formControlName="description" rows="4"
                 placeholder="Detailed product description"></textarea>
-              <div class="error-hint"
-                *ngIf="productForm.get('description')?.invalid && productForm.get('description')?.touched">
-                Description is required
-              </div>
             </div>
 
-            <div class="form-group">
+            <div class="form-group featured-toggle-container">
               <label for="edit-featured">Featured Product</label>
-              <div class="toggle-switch">
+              <div class="featured-toggle">
                 <input type="checkbox" id="edit-featured" formControlName="featured">
-                <label for="edit-featured" class="toggle-label"></label>
+                <label for="edit-featured" class="toggle-label">
+                  <span class="slider"></span>
+                  <span class="toggle-text">No</span>
+                  <span class="toggle-text">Yes</span>
+                </label>
               </div>
-            </div>
-
-            <div formGroupName="discount" class="discount-group">
-              <div class="form-group">
-                <label for="edit-percentage">Discount Percentage (%)</label>
-                <input type="number" id="edit-percentage" formControlName="percentage" min="0" max="100">
-              </div>
-
-              <div class="form-group">
-                <label for="edit-validUntil">Valid Until</label>
-                <input type="date" id="edit-validUntil" formControlName="validUntil">
-              </div>
-            </div>
-
-            <div formGroupName="details" class="details-group">
-              <div class="form-group">
-                <label for="edit-material">Material</label>
-                <input type="text" id="edit-material" formControlName="material" placeholder="e.g., Gold, Silver">
-              </div>
-
-              <div class="form-group">
-                <label for="edit-weight">Weight</label>
-                <input type="text" id="edit-weight" formControlName="weight" placeholder="e.g., 5g">
-              </div>
-
-              <div class="form-group">
-                <label for="edit-dimensions">Dimensions</label>
-                <input type="text" id="edit-dimensions" formControlName="dimensions" placeholder="e.g., 20cm length">
-              </div>
-
-              <div class="form-group">
-                <label for="edit-features">Features (comma-separated)</label>
-                <input type="text" id="edit-features" formControlName="features"
-                  placeholder="e.g., Waterproof, Hypoallergenic">
-              </div>
-            </div>
-
-            <div class="form-group full-width">
-              <label for="edit-tags">Tags (comma-separated)</label>
-              <input type="text" id="edit-tags" formControlName="tags" placeholder="e.g., wedding, gift, party">
             </div>
           </div>
 

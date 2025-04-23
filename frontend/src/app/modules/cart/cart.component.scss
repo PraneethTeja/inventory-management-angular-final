@@ -175,6 +175,11 @@
   font-size: 1rem;
 }
 
+textarea.form-input {
+  resize: vertical;
+  min-height: 80px;
+}
+
 .form-input:focus {
   outline: none;
   border-color: var(--primary);

@@ -105,6 +105,7 @@ export class ProductsComponent implements OnInit {
     this.error = '';
 
     console.log('Attempting to load products from Firebase...');
+    console.log('Selected category:', this.selectedCategory);
 
     this.fetchProductsFromFirestore()
       .then(products => {
@@ -114,10 +115,30 @@ export class ProductsComponent implements OnInit {
       })
       .catch(error => {
         console.error('Error loading products:', error);
-        this.error = 'Failed to load products.';
-        this.products = [];
-        this.filterProducts();
-        this.setLoadingState(false);
+
+        // Check if this is a missing index error
+        if (error.code === 'failed-precondition' && error.message && error.message.includes('index')) {
+          console.log('Detected missing index error, trying fallback query');
+          // Fallback to a simpler query without compound conditions
+          this.fetchProductsWithFallback()
+            .then(products => {
+              this.products = products;
+              this.filterProducts();
+              this.setLoadingState(false);
+            })
+            .catch(fallbackError => {
+              console.error('Even fallback query failed:', fallbackError);
+              this.error = 'Failed to load products. Please try again.';
+              this.products = [];
+              this.filterProducts();
+              this.setLoadingState(false);
+            });
+        } else {
+          this.error = 'Failed to load products. Please try again.';
+          this.products = [];
+          this.filterProducts();
+          this.setLoadingState(false);
+        }
       });
   }
 
@@ -127,13 +148,26 @@ export class ProductsComponent implements OnInit {
 
       // Build query based on category filter
       if (this.selectedCategory !== 'All') {
-        productsQuery = query(
-          collection(firestore, this.COLLECTION_NAME),
-          where('category', '==', this.selectedCategory),
-          orderBy('createdAt', 'desc'),
-          limit(50)
-        );
+        console.log('Filtering by category:', this.selectedCategory);
+        try {
+          // Try with compound query that requires index
+          productsQuery = query(
+            collection(firestore, this.COLLECTION_NAME),
+            where('category', '==', this.selectedCategory),
+            orderBy('createdAt', 'desc'),
+            limit(50)
+          );
+        } catch (indexError) {
+          console.error('Index error, falling back to simpler query:', indexError);
+          // Fallback to a query without orderBy if there's an index error
+          productsQuery = query(
+            collection(firestore, this.COLLECTION_NAME),
+            where('category', '==', this.selectedCategory),
+            limit(50)
+          );
+        }
       } else {
+        console.log('Loading all products');
         productsQuery = query(
           collection(firestore, this.COLLECTION_NAME),
           orderBy('createdAt', 'desc'),
@@ -141,7 +175,9 @@ export class ProductsComponent implements OnInit {
         );
       }
 
+      console.log('Executing Firestore query');
       const querySnapshot = await getDocs(productsQuery);
+      console.log('Got results:', querySnapshot.size);
       const products: Product[] = [];
 
       querySnapshot.forEach((doc) => {
@@ -184,6 +220,63 @@ export class ProductsComponent implements OnInit {
     }
   }
 
+  // Fallback method that gets all products and filters in memory
+  async fetchProductsWithFallback(): Promise<Product[]> {
+    try {
+      // Get all products without filtering by category
+      const productsQuery = query(
+        collection(firestore, this.COLLECTION_NAME),
+        limit(100)
+      );
+
+      const querySnapshot = await getDocs(productsQuery);
+      const products: Product[] = [];
+
+      querySnapshot.forEach((doc) => {
+        const data = doc.data() as any;
+
+        // Calculate discounted price
+        const price = data['price'] || 0;
+        const discountPercentage = data['discount']?.percentage || 0;
+        const discountedPrice = discountPercentage > 0
+          ? price - (price * discountPercentage / 100)
+          : price;
+
+        // Convert Firebase timestamp to Date if needed
+        const createdAt = data['createdAt']?.toDate ? data['createdAt'].toDate() : new Date(data['createdAt']);
+        const updatedAt = data['updatedAt']?.toDate ? data['updatedAt'].toDate() : new Date(data['updatedAt']);
+        let validUntil = null;
+        if (data['discount']?.validUntil) {
+          validUntil = data['discount'].validUntil?.toDate
+            ? data['discount'].validUntil.toDate()
+            : new Date(data['discount'].validUntil);
+        }
+
+        products.push({
+          _id: doc.id,
+          ...data,
+          createdAt,
+          updatedAt,
+          discount: {
+            ...data['discount'],
+            validUntil
+          },
+          discountedPrice
+        } as Product);
+      });
+
+      // Filter by category in memory if needed
+      if (this.selectedCategory !== 'All') {
+        return products.filter(p => p.category === this.selectedCategory);
+      }
+
+      return products;
+    } catch (error) {
+      console.error('Error in fallback product fetch:', error);
+      throw error;
+    }
+  }
+
   filterProducts(): void {
     // First apply category filter
     let result = this.selectedCategory === 'All'
@@ -212,7 +305,9 @@ export class ProductsComponent implements OnInit {
   }
 
   onCategoryChange(category: string): void {
+    console.log(`Changing category from ${this.selectedCategory} to ${category}`);
     this.selectedCategory = category;
+    this.error = ''; // Clear any previous errors
     this.loadProducts(); // Reload products with the new filter
   }
 

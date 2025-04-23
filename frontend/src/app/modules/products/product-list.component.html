@@ -59,29 +59,22 @@
       <div *ngFor="let product of filteredProducts" class="product-card">
         <div class="product-image" (click)="viewProductDetails(product)">
           <img [src]="product.imageUrl || 'assets/images/placeholder.jpg'" [alt]="product.name">
-          <span class="discount-badge" *ngIf="(product.discountPercentage ?? 0) > 0">
-            {{product.discountPercentage}}% OFF
+          <span class="featured-badge" *ngIf="product.featured">
+            <i class="fas fa-star"></i> Featured
           </span>
-          <span class="stock-badge out-of-stock" *ngIf="!product.inStock || getProductStock(product) === 0">Out of
-            Stock</span>
+          <span class="stock-badge out-of-stock" *ngIf="!product.inStock || getProductStock(product) === 0">
+            Out of Stock
+          </span>
           <span class="stock-badge low-stock"
-            *ngIf="product.inStock && getProductStock(product) > 0 && getProductStock(product) < 5">Low
-            Stock</span>
+            *ngIf="product.inStock && getProductStock(product) > 0 && getProductStock(product) < 5">
+            Low Stock
+          </span>
         </div>
         <div class="product-info">
           <h3 class="product-title" (click)="viewProductDetails(product)">{{ product.name }}</h3>
           <div class="product-meta">
             <p class="product-category">{{ product.category }}</p>
             <p class="product-code">Code: {{ product.productCode }}</p>
-          </div>
-          <div class="price-container">
-            <div class="discount-price" *ngIf="(product.discountPercentage ?? 0) > 0">
-              <p class="sale-price">{{ product.discountedPrice | currency:'INR' }}</p>
-              <p class="original-price">{{ product.price | currency:'INR' }}</p>
-            </div>
-            <p class="product-price" *ngIf="(product.discountPercentage ?? 0) === 0">
-              {{ product.price | currency:'INR' }}
-            </p>
           </div>
           <div class="product-actions">
             <button class="btn-view" (click)="viewProductDetails(product)">
@@ -123,17 +116,6 @@
             <p class="product-code">Product Code: {{ selectedProduct.productCode }}</p>
           </div>
 
-          <div class="modal-price-container">
-            <div class="discount-price" *ngIf="(selectedProduct?.discountPercentage ?? 0) > 0">
-              <p class="sale-price">{{ selectedProduct!.discountedPrice | currency:'INR' }}</p>
-              <p class="original-price">{{ selectedProduct!.price | currency:'INR' }}</p>
-              <p class="discount-text">Save {{ selectedProduct!.discountPercentage }}% off retail</p>
-            </div>
-            <p class="product-price" *ngIf="(selectedProduct?.discountPercentage ?? 0) === 0">
-              {{ selectedProduct!.price | currency:'INR' }}
-            </p>
-          </div>
-
           <div class="product-description">
             <h3>Description</h3>
             <p>{{ selectedProduct.description }}</p>
@@ -159,13 +141,6 @@
               <i class="fas fa-check-circle"></i> In Stock
             </p>
           </div>
-
-          <!-- <div class="modal-product-actions">
-            <button (click)="closeProductModal($event)" class="btn-secondary">
-              <i class="fas fa-arrow-left"></i>
-              Back to Products
-            </button>
-          </div> -->
 
           <div class="product-tags" *ngIf="selectedProduct.tags && selectedProduct.tags.length > 0">
             <span class="tag" *ngFor="let tag of selectedProduct.tags">{{ tag }}</span>

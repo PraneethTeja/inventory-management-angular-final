@@ -1,0 +1,303 @@
+/* Animations for Create Combination Redesign */
+
+/* Keyframes definitions */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-10px); }
+  60% { transform: translateY(-5px); }
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.8); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* Loading spinner animation */
+.loading-spinner {
+  animation: rotate 1.5s linear infinite;
+}
+
+/* Page transition animations */
+.combination-experience {
+  animation: fadeIn 0.5s ease-out;
+  
+  .hero-section {
+    .hero-content {
+      h1 {
+        animation: fadeInDown 0.8s ease-out;
+      }
+      
+      p {
+        animation: fadeInDown 0.8s ease-out 0.2s both;
+      }
+    }
+  }
+  
+  .step-indicator {
+    animation: fadeIn 0.8s ease-out 0.6s both;
+    
+    .step-circle {
+      transition: background-color 0.3s ease, color 0.3s ease, transform 0.3s ease;
+      
+      &.active {
+        animation: pulse 1s ease-in-out;
+      }
+      
+      &:hover {
+        transform: scale(1.1);
+      }
+    }
+  }
+  
+  .designer-container {
+    animation: fadeInUp 0.8s ease-out 0.4s both;
+  }
+}
+
+/* Selection panel animations */
+.selection-panel {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+  }
+  
+  .panel-header {
+    h2 {
+      position: relative;
+      
+      &::after {
+        content: '';
+        position: absolute;
+        bottom: -5px;
+        left: 0;
+        width: 0;
+        height: 2px;
+        background-color: currentColor;
+        transition: width 0.3s ease;
+      }
+      
+      &:hover::after {
+        width: 100%;
+      }
+    }
+  }
+  
+  .back-button {
+    transition: transform 0.3s ease;
+    
+    &:hover {
+      transform: translateX(-3px);
+    }
+  }
+  
+  .panel-content {
+    animation: fadeIn 0.5s ease-out;
+  }
+  
+  .option-button {
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    
+    &:hover {
+      transform: translateY(-2px);
+    }
+    
+    &.active {
+      animation: pulse 0.5s ease-in-out;
+    }
+  }
+  
+  .search-box {
+    transition: box-shadow 0.3s ease, border-color 0.3s ease;
+    
+    input {
+      transition: background-color 0.3s ease;
+    }
+    
+    .clear-button {
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      
+      &:hover {
+        transform: scale(1.1);
+      }
+    }
+  }
+}
+
+/* Item grid animations */
+.item-grid {
+  .grid-item {
+    animation: fadeIn 0.5s ease-out;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    animation-fill-mode: both;
+    
+    @for $i from 1 through 12 {
+      &:nth-child(#{$i}) {
+        animation-delay: #{$i * 0.05}s;
+      }
+    }
+    
+    &:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--shadow-md);
+    }
+    
+    .item-image-container {
+      img {
+        transition: transform 0.3s ease;
+      }
+      
+      &:hover img {
+        transform: scale(1.05);
+      }
+    }
+    
+    .add-button {
+      transition: transform 0.3s ease, opacity 0.3s ease;
+      
+      &:hover {
+        transform: scale(1.1);
+      }
+    }
+  }
+}
+
+/* Preview panel animations */
+.preview-panel {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+  }
+  
+  .preview-container {
+    animation: scaleIn 0.5s ease-out;
+  }
+  
+  .preview-badge {
+    animation: fadeIn 0.5s ease-out, pulse 2s infinite 1s;
+  }
+  
+  .empty-preview {
+    animation: fadeIn 0.5s ease-out;
+  }
+  
+  .price-row.total {
+    animation: fadeInUp 0.5s ease-out;
+  }
+  
+  .add-to-cart-button {
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    
+    &:hover {
+      transform: translateY(-2px);
+    }
+    
+    &:active {
+      transform: translateY(0);
+    }
+  }
+}
+
+/* Pendant tags animations */
+.pendant-tag {
+  animation: fadeIn 0.3s ease-out;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+  }
+  
+  .remove-pendant {
+    transition: transform 0.3s ease;
+    
+    &:hover {
+      transform: scale(1.2);
+    }
+  }
+}
+
+/* Shimmer loading effect */
+.shimmer-loading {
+  background: linear-gradient(90deg, 
+    rgba(255,255,255,0.1) 0%, 
+    rgba(255,255,255,0.2) 50%, 
+    rgba(255,255,255,0.1) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Success and error message animations */
+.notification {
+  animation: fadeInDown 0.5s ease-out;
+  
+  &.success {
+    animation: fadeInDown 0.5s ease-out, pulse 1s ease-in-out 0.5s;
+  }
+  
+  &.error {
+    animation: fadeInDown 0.5s ease-out, shake 0.5s ease-in-out 0.5s;
+  }
+}
+
+/* Design inspiration animations */
+.design-inspiration {
+  animation: fadeInUp 0.8s ease-out;
+  
+  .feature-item {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeInUp 0.5s ease-out forwards;
+    
+    @for $i from 1 through 5 {
+      &:nth-child(#{$i}) {
+        animation-delay: #{0.2 + ($i * 0.1)}s;
+      }
+    }
+  }
+} 

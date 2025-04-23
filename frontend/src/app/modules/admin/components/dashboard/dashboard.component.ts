@@ -43,11 +43,16 @@ export class DashboardComponent implements OnInit {
   recentOrders: any[] = [];
   isLoading: boolean = true;
   error: string = '';
+  isRevenueHidden: boolean = true;
 
   constructor(
     private orderService: OrderService,
     private productService: ProductService
   ) { }
+
+  toggleRevenueVisibility(): void {
+    this.isRevenueHidden = !this.isRevenueHidden;
+  }
 
   ngOnInit(): void {
     this.fetchDashboardData();

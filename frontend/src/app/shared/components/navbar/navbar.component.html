@@ -1,7 +1,10 @@
 <header class="main-header jewelry-navbar" [ngClass]="{'scrolled': isScrolled}">
   <div class="container">
     <div class="logo-container">
-      <a routerLink="/" class="logo" (click)="closeMobileMenu()">Chic Chains & Charms</a>
+      <a routerLink="/" class="logo" (click)="closeMobileMenu()">
+        <img src="./assets/images/logo.jpg" alt="Logo" class="brand-logo">
+        <span class="brand-name">Chic Chains & Charms</span>
+      </a>
     </div>
 
     <button class="mobile-toggle" (click)="toggleMobileMenu()" [class.active]="isMobileMenuOpen">
@@ -103,6 +106,19 @@
   .jewelry-navbar .logo {
     color: #7f2257 !important;
     text-decoration: none !important;
+    font-weight: bold !important;
+    display: flex !important;
+    align-items: center !important;
+  }
+
+  .jewelry-navbar .brand-logo {
+    height: 50px !important;
+    width: auto !important;
+    margin-right: 10px !important;
+  }
+
+  .jewelry-navbar .brand-name {
+    color: #7f2257 !important;
     font-weight: bold !important;
   }
 

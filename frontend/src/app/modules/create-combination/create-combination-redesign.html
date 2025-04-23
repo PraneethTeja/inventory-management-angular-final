@@ -1,0 +1,508 @@
+<div class="combination-experience">
+  <!-- Navbar Component -->
+  <app-navbar [activePage]="'create-combination'" [cartItemCount]="cartItemCount"></app-navbar>
+
+  <!-- Immersive Hero Section with parallax effect -->
+  <section class="hero-parallax">
+    <div class="hero-content">
+      <h1 class="hero-title">Create Your Unique Jewelry</h1>
+      <p class="hero-subtitle">Mix and match chains and pendants to express your individual style</p>
+    </div>
+  </section>
+
+  <div class="designer-container">
+    <!-- Loading and error messages -->
+    <div *ngIf="isLoading" class="loading-container">
+      <div class="loader"></div>
+      <p>Gathering our finest jewelry pieces...</p>
+    </div>
+
+    <div *ngIf="error" class="notification-container error">
+      <i class="bi bi-exclamation-diamond"></i>
+      <h3>Something went wrong</h3>
+      <p>{{ error }}</p>
+    </div>
+
+    <div *ngIf="success" class="notification-container success">
+      <i class="bi bi-check-circle"></i>
+      <h3>Success!</h3>
+      <p>{{ success }}</p>
+    </div>
+
+    <!-- Main content -->
+    <div *ngIf="!isLoading && !error" class="designer-content">
+      <!-- Design Process Steps -->
+      <div class="design-process">
+        <div class="process-step" [class.active]="!selectedChain">
+          <div class="step-indicator">1</div>
+          <div class="step-content">
+            <h3>Choose Your Base</h3>
+            <p>Select your perfect chain, bracelet, or anklet</p>
+          </div>
+          <div class="step-status">
+            <i class="bi" [ngClass]="selectedChain ? 'bi-check-circle-fill' : 'bi-circle'"></i>
+          </div>
+        </div>
+        <div class="process-connector"></div>
+        <div class="process-step" [class.active]="selectedChain && selectedPendants.length === 0">
+          <div class="step-indicator">2</div>
+          <div class="step-content">
+            <h3>Add Pendants</h3>
+            <p>Enhance your piece with beautiful pendants</p>
+          </div>
+          <div class="step-status">
+            <i class="bi" [ngClass]="selectedPendants.length > 0 ? 'bi-check-circle-fill' : 'bi-circle'"></i>
+          </div>
+        </div>
+        <div class="process-connector"></div>
+        <div class="process-step" [class.active]="selectedChain && selectedPendants.length > 0">
+          <div class="step-indicator">3</div>
+          <div class="step-content">
+            <h3>Complete Your Design</h3>
+            <p>Review and add your creation to cart</p>
+          </div>
+          <div class="step-status">
+            <i class="bi bi-circle"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="designer-interface">
+        <!-- Selection Panel -->
+        <div class="selection-panel">
+          <!-- Dynamic Panel Header based on current step -->
+          <div class="panel-header" [ngClass]="{'chain-panel': !selectedChain, 
+                          'pendant-panel': selectedChain && selectedPendants.length === 0,
+                          'review-panel': selectedChain && selectedPendants.length > 0}">
+            <h2>
+              <ng-container *ngIf="!selectedChain">
+                <i class="bi bi-link"></i> Select Your {{ selectedChainType || 'Chain' }}
+              </ng-container>
+              <ng-container *ngIf="selectedChain && selectedPendants.length === 0">
+                <i class="bi bi-gem"></i> Choose Your Pendants
+              </ng-container>
+              <ng-container *ngIf="selectedChain && selectedPendants.length > 0">
+                <i class="bi bi-stars"></i> Your Custom Creation
+              </ng-container>
+            </h2>
+            <div class="panel-actions" *ngIf="selectedChain">
+              <button class="back-button"
+                (click)="selectedChain = null; selectedChainType = ''; selectedChainSize = ''; selectedChainLayer = ''">
+                <i class="bi bi-arrow-left"></i> Change Chain
+              </button>
+            </div>
+          </div>
+
+          <!-- Chain Selection - Step 1 -->
+          <div *ngIf="!selectedChain" class="panel-content chain-selection">
+            <!-- Chain Selection Controls -->
+            <div class="selection-controls">
+              <!-- Chain Type Selection -->
+              <div class="control-group">
+                <h4><i class="bi bi-tag"></i> Chain Type</h4>
+                <div class="option-buttons">
+                  <button *ngFor="let type of chainTypes" class="option-button"
+                    [class.active]="selectedChainType === type" (click)="onChainTypeChange(type)">
+                    <i class="bi" [ngClass]="{
+                      'bi-link': type === 'Chain',
+                      'bi-watch': type === 'Bracelet',
+                      'bi-flower2': type === 'Anklet'
+                    }"></i>
+                    {{ type }}
+                  </button>
+                </div>
+              </div>
+
+              <!-- Chain Size Selection -->
+              <div class="control-group">
+                <h4><i class="bi bi-rulers"></i> Size</h4>
+                <div class="size-guide" *ngIf="selectedChainType">
+                  <i class="bi bi-info-circle"></i>
+                  <span *ngIf="selectedChainType === 'Chain'">Small: 16-18" | Medium: 18-20" | Large: 20-22"</span>
+                  <span *ngIf="selectedChainType === 'Bracelet'">Small: 6-7" | Medium: 7-8" | Large: 8-9"</span>
+                  <span *ngIf="selectedChainType === 'Anklet'">Small: 8-9" | Medium: 9-10" | Large: 10-11"</span>
+                </div>
+                <div class="option-buttons">
+                  <button *ngFor="let size of chainSizes" class="option-button"
+                    [class.active]="selectedChainSize === size" (click)="selectedChainSize = size">
+                    {{ size }}
+                  </button>
+                </div>
+              </div>
+
+              <!-- Chain Layer Selection (only for Chain type) -->
+              <div class="control-group" *ngIf="selectedChainType === 'Chain'">
+                <h4><i class="bi bi-layers"></i> Layers</h4>
+                <div class="option-buttons">
+                  <button *ngFor="let layer of chainLayers" class="option-button"
+                    [class.active]="selectedChainLayer === layer" (click)="selectedChainLayer = layer">
+                    <span class="layer-indicator" [ngClass]="'layer-' + layer.toLowerCase()"></span>
+                    {{ layer }}
+                  </button>
+                </div>
+              </div>
+
+              <!-- Chain Search -->
+              <div class="control-group">
+                <div class="search-box">
+                  <i class="bi bi-search"></i>
+                  <input type="text" placeholder="Search by name or code..." [(ngModel)]="chainSearchTerm"
+                    (keyup)="filterChains()" class="search-input">
+                  <button *ngIf="chainSearchTerm" class="clear-button" (click)="clearChainSearch($event)">
+                    <i class="bi bi-x-circle"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Chain Gallery -->
+            <div class="product-gallery">
+              <div *ngIf="filteredChains.length === 0" class="empty-gallery">
+                <div class="empty-icon">
+                  <i class="bi bi-search"></i>
+                </div>
+                <p>No chains found matching your criteria</p>
+                <button class="reset-button" (click)="clearChainSearch($event)">Clear Filters</button>
+              </div>
+
+              <div class="gallery-grid">
+                <div *ngFor="let chain of filteredChains" class="product-card"
+                  [class.selected]="selectedChain && chain && selectedChain._id === chain._id"
+                  (click)="selectChain(chain)">
+                  <div class="card-image">
+                    <img [src]="chain?.imageUrl || 'assets/images/placeholder.jpg'" [alt]="chain?.name || 'Chain'">
+                    <div class="card-overlay">
+                      <span class="select-button">
+                        <i class="bi bi-check2"></i> Select
+                      </span>
+                    </div>
+                    <div *ngIf="chain?.featured" class="featured-tag">
+                      <i class="bi bi-star-fill"></i> Featured
+                    </div>
+                  </div>
+                  <div class="card-info">
+                    <h5 class="product-title">{{ chain?.name || 'Chain' }}</h5>
+                    <p class="product-code">Code: {{ chain?.productCode || 'N/A' }}</p>
+                  </div>
+                  <div class="selection-indicator">
+                    <i class="bi bi-check-circle-fill"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Chain Selected but waiting for confirmation to proceed -->
+          <div *ngIf="selectedChain && !proceedToPendants" class="panel-content chain-confirmation">
+            <div class="selected-item-confirm">
+              <div class="selected-item-preview">
+                <h3 class="confirmation-title">
+                  <i class="bi bi-check-circle-fill"></i>
+                  Chain Selected
+                </h3>
+                <div class="selected-item-card">
+                  <div class="selected-item-image">
+                    <img [src]="selectedChain?.imageUrl || 'assets/images/placeholder.jpg'"
+                      [alt]="selectedChain?.name || 'Chain'">
+                  </div>
+                  <div class="selected-item-details">
+                    <h4 class="selected-item-name">{{ selectedChain?.name || 'Chain' }}</h4>
+                    <p class="selected-item-code">Code: {{ selectedChain?.productCode || 'N/A' }}</p>
+
+                    <div class="selected-item-specs">
+                      <span class="spec-tag">{{ selectedChainType }}</span>
+                      <span class="spec-tag">{{ selectedChainSize }}</span>
+                      <span class="spec-tag" *ngIf="selectedChainType === 'Chain'">{{ selectedChainLayer }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="confirmation-actions">
+                <button class="action-button secondary"
+                  (click)="selectedChain = null; selectedChainType = ''; selectedChainSize = ''; selectedChainLayer = ''">
+                  <i class="bi bi-arrow-left"></i> Change Selection
+                </button>
+                <button class="action-button primary" (click)="proceedToPendants = true">
+                  Continue to Pendants <i class="bi bi-arrow-right"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pendant Selection - Step 2 -->
+          <div *ngIf="selectedChain && proceedToPendants && selectedPendants.length < 5"
+            class="panel-content pendant-selection">
+            <!-- Pendant Search -->
+            <div class="selection-controls">
+              <div class="control-group">
+                <div class="search-box">
+                  <i class="bi bi-search"></i>
+                  <input type="text" placeholder="Search pendants..." [(ngModel)]="pendantSearchTerm"
+                    (keyup)="filterPendants()" class="search-input">
+                  <button *ngIf="pendantSearchTerm" class="clear-button" (click)="clearPendantSearch($event)">
+                    <i class="bi bi-x-circle"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Selected Pendants Summary -->
+            <div *ngIf="selectedPendants.length > 0" class="selected-pendants-summary">
+              <h4>
+                <i class="bi bi-gem"></i>
+                Selected Pendants: <span class="count">{{ selectedPendants.length }}</span>
+              </h4>
+              <div class="selected-tags">
+                <div *ngFor="let pendant of selectedPendants" class="pendant-tag">
+                  <img [src]="pendant?.imageUrl || 'assets/images/placeholder.jpg'" [alt]="pendant?.name || 'Pendant'"
+                    class="tag-thumbnail">
+                  <span class="tag-name">{{ pendant?.name || 'Pendant' }}</span>
+                  <span *ngIf="pendant?.quantity && pendant.quantity > 1" class="tag-quantity">× {{ pendant.quantity
+                    }}</span>
+                  <button class="tag-remove" (click)="selectPendant(pendant)">
+                    <i class="bi bi-x"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Pendant Gallery -->
+            <div class="product-gallery">
+              <div *ngIf="filteredPendants.length === 0" class="empty-gallery">
+                <div class="empty-icon">
+                  <i class="bi bi-search"></i>
+                </div>
+                <p>No pendants found matching your criteria</p>
+                <button class="reset-button" (click)="clearPendantSearch($event)">Clear Search</button>
+              </div>
+
+              <div class="gallery-grid">
+                <div *ngFor="let pendant of filteredPendants" class="product-card"
+                  [class.selected]="pendant && isPendantSelected(pendant)" (click)="selectPendant(pendant)">
+                  <div class="card-image">
+                    <img [src]="pendant?.imageUrl || 'assets/images/placeholder.jpg'"
+                      [alt]="pendant?.name || 'Pendant'">
+                    <div class="card-overlay">
+                      <ng-container *ngIf="pendant && !isPendantSelected(pendant)">
+                        <span class="select-button">
+                          <i class="bi bi-plus-circle"></i> Add
+                        </span>
+                      </ng-container>
+                      <ng-container *ngIf="pendant && isPendantSelected(pendant)">
+                        <div class="quantity-controls">
+                          <button class="qty-button decrease" (click)="decreasePendantQuantity(pendant, $event)">
+                            <i class="bi bi-dash-circle"></i>
+                          </button>
+                          <span class="qty-value">{{ pendant ? getPendantQuantity(pendant) : 0 }}</span>
+                          <button class="qty-button increase" (click)="incrementPendantQuantity(pendant, $event)">
+                            <i class="bi bi-plus-circle"></i>
+                          </button>
+                        </div>
+                      </ng-container>
+                    </div>
+                    <div *ngIf="pendant?.featured" class="featured-tag">
+                      <i class="bi bi-star-fill"></i> Featured
+                    </div>
+                  </div>
+                  <div class="card-info">
+                    <h5 class="product-title">{{ pendant?.name || 'Pendant' }}</h5>
+                    <p class="product-code">Code: {{ pendant?.productCode || 'N/A' }}</p>
+                  </div>
+                  <div class="selection-indicator">
+                    <i class="bi bi-check-circle-fill"></i>
+                    <span *ngIf="pendant && getPendantQuantity(pendant) > 1" class="quantity-badge">
+                      {{ getPendantQuantity(pendant) }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Review Selection - Step 3 -->
+          <div *ngIf="selectedChain && proceedToPendants && selectedPendants.length > 0"
+            class="panel-content review-selection">
+            <div class="review-summary">
+              <h3>Your Personalized Jewelry</h3>
+
+              <!-- Base Chain/Bracelet/Anklet -->
+              <div class="review-section">
+                <h4 class="section-title">
+                  <i class="bi bi-link"></i> Base Item
+                </h4>
+                <div class="review-item">
+                  <div class="item-image">
+                    <img [src]="selectedChain?.imageUrl || 'assets/images/placeholder.jpg'"
+                      [alt]="selectedChain?.name || 'Chain'">
+                  </div>
+                  <div class="item-details">
+                    <h5>{{ selectedChain?.name || 'Chain' }}</h5>
+                    <div class="item-attributes">
+                      <span class="attribute">{{ selectedChainType }}</span>
+                      <span class="attribute">{{ selectedChainSize }}</span>
+                      <span class="attribute" *ngIf="selectedChainType === 'Chain'">
+                        {{ selectedChainLayer }} Layer
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Pendants -->
+              <div class="review-section">
+                <h4 class="section-title">
+                  <i class="bi bi-gem"></i> Pendants
+                </h4>
+                <div *ngFor="let pendant of selectedPendants" class="review-item">
+                  <div class="item-image">
+                    <img [src]="pendant?.imageUrl || 'assets/images/placeholder.jpg'"
+                      [alt]="pendant?.name || 'Pendant'">
+                  </div>
+                  <div class="item-details">
+                    <h5>{{ pendant?.name || 'Pendant' }}</h5>
+                    <div *ngIf="pendant?.quantity && pendant.quantity > 1" class="item-quantity">
+                      Quantity: {{ pendant.quantity }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Preview Panel -->
+        <div class="preview-panel">
+          <div class="preview-header">
+            <h2>Your Creation</h2>
+          </div>
+
+          <div class="preview-content">
+            <!-- Visualization Area -->
+            <div class="visualization">
+              <!-- Empty State -->
+              <div *ngIf="!selectedChain" class="empty-visualization">
+                <div class="placeholder-icon">
+                  <i class="bi bi-gem"></i>
+                </div>
+                <p>Your custom jewelry will appear here</p>
+                <p class="hint">Start by selecting a chain from the left</p>
+              </div>
+
+              <!-- Visualization with Selected Items -->
+              <div *ngIf="selectedChain" class="visualization-display">
+                <div class="visual-container">
+                  <!-- This would ideally be a composite visual or illustration -->
+                  <div class="chain-visual">
+                    <img [src]="selectedChain?.imageUrl || 'assets/images/placeholder.jpg'"
+                      [alt]="selectedChain?.name || 'Chain'" class="base-image">
+                  </div>
+                  <div *ngIf="selectedPendants.length > 0" class="pendants-visual">
+                    <div *ngFor="let pendant of selectedPendants; let i = index" class="pendant-visual"
+                      [ngClass]="'pendant-position-' + (i+1)">
+                      <img [src]="pendant?.imageUrl || 'assets/images/placeholder.jpg'"
+                        [alt]="pendant?.name || 'Pendant'" class="pendant-image">
+                      <span *ngIf="pendant?.quantity && pendant.quantity > 1" class="pendant-count">
+                        × {{ pendant.quantity }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="creation-specs">
+                  <div class="spec-item">
+                    <span class="spec-label">Type:</span>
+                    <span class="spec-value">{{ selectedChainType || 'Chain' }}</span>
+                  </div>
+                  <div class="spec-item">
+                    <span class="spec-label">Size:</span>
+                    <span class="spec-value">{{ selectedChainSize || 'Medium' }}</span>
+                  </div>
+                  <div class="spec-item" *ngIf="selectedChainType === 'Chain'">
+                    <span class="spec-label">Layers:</span>
+                    <span class="spec-value">{{ selectedChainLayer || 'Single' }}</span>
+                  </div>
+                  <div class="spec-item">
+                    <span class="spec-label">Pendants:</span>
+                    <span class="spec-value">{{ getTotalPendantCount() }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Price Summary -->
+              <div class="price-summary">
+                <div class="price-rows">
+                  <div class="price-row">
+                    <span>Combination Price</span>
+                    <span class="price-value">₹{{ calculateCombinationPrice() }}</span>
+                  </div>
+
+                  <div class="price-description">
+                    <i class="bi bi-info-circle"></i>
+                    <span *ngIf="selectedChainType === 'Chain' && selectedChainLayer">
+                      {{ selectedChainLayer }} layered chain with {{ getTotalPendantCount() }} pendant{{
+                      getPendantSuffix() }}
+                    </span>
+                    <span *ngIf="(selectedChainType === 'Bracelet' || selectedChainType === 'Anklet')">
+                      {{ selectedChainType }} with {{ getTotalPendantCount() }} pendant{{ getPendantSuffix() }}
+                    </span>
+                  </div>
+
+                  <div class="price-notice">
+                    <small>Packing (₹15) and delivery (₹40) charges will be added during checkout</small>
+                  </div>
+
+                  <div class="price-row total">
+                    <span>Total Amount</span>
+                    <span class="price-value">₹{{ getTotalPrice() }}</span>
+                  </div>
+                </div>
+
+                <button class="add-to-cart-button" [disabled]="!selectedChain || selectedPendants.length === 0 || 
+                                   !selectedChainType || !selectedChainSize || 
+                                   (selectedChainType === 'Chain' && !selectedChainLayer)" (click)="addToCart()">
+                  <i class="bi bi-cart-plus"></i>
+                  Add to Cart
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Features Section -->
+  <section class="inspiration-section">
+    <div class="inspiration-header">
+      <h2>Why Create Custom Jewelry?</h2>
+      <p>Express your personal style with a one-of-a-kind creation</p>
+    </div>
+
+    <div class="inspiration-features">
+      <div class="feature-card">
+        <div class="feature-icon">
+          <i class="bi bi-fingerprint"></i>
+        </div>
+        <h3>Uniquely Yours</h3>
+        <p>Create jewelry that reflects your personal style and story</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <i class="bi bi-gift"></i>
+        </div>
+        <h3>Perfect Gifts</h3>
+        <p>Design meaningful pieces for your loved ones</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <i class="bi bi-stars"></i>
+        </div>
+        <h3>Endless Possibilities</h3>
+        <p>Mix and match to create your ideal combination</p>
+      </div>
+    </div>
+  </section>
+</div>

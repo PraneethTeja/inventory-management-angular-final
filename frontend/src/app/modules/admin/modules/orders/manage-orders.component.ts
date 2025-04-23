@@ -76,8 +76,13 @@ export class ManageOrdersComponent implements OnInit {
     this.fetchOrdersFromFirestore()
       .then(ordersData => {
         this.orders = ordersData.orders;
-        this.totalCount = ordersData.totalCount;
+        // Only update totalCount from Firestore if not filtering by search
+        if (this.searchTerm.trim() === '') {
+          this.totalCount = ordersData.totalCount;
+        }
         this.applyFilters();
+        // After filtering, totalCount should reflect filtered results
+        this.totalCount = this.filteredOrders.length;
         this.isLoading = false;
       })
       .catch(error => {
@@ -85,6 +90,7 @@ export class ManageOrdersComponent implements OnInit {
         this.error = 'Failed to load orders. Please try again.';
         this.orders = [];
         this.applyFilters();
+        this.totalCount = this.filteredOrders.length;
         this.isLoading = false;
       });
   }
@@ -119,25 +125,15 @@ export class ManageOrdersComponent implements OnInit {
       // Add sorting
       queryConstraints.push(orderBy(this.sortBy, this.sortDirection));
 
-      // First, get total count for pagination
-      const countQuery = query(
+      // For search functionality, we need to get all records
+      // as Firestore doesn't support text search across multiple fields
+      const allRecordsQuery = query(
         collection(firestore, this.COLLECTION_NAME),
         ...queryConstraints
       );
 
-      const countSnapshot = await getDocs(countQuery);
-      const totalCount = countSnapshot.size;
-
-      // Then get paginated data
-      const startIndex = (this.currentPage - 1) * this.itemsPerPage;
-      const paginatedQuery = query(
-        collection(firestore, this.COLLECTION_NAME),
-        ...queryConstraints,
-        limit(this.itemsPerPage)
-      );
-
-      const querySnapshot = await getDocs(paginatedQuery);
-      const orders: any[] = [];
+      const querySnapshot = await getDocs(allRecordsQuery);
+      const allOrders: any[] = [];
 
       querySnapshot.forEach((doc) => {
         const data = doc.data();
@@ -146,7 +142,7 @@ export class ManageOrdersComponent implements OnInit {
         const createdAt = data['createdAt']?.toDate ? data['createdAt'].toDate() : new Date(data['createdAt']);
         const updatedAt = data['updatedAt']?.toDate ? data['updatedAt'].toDate() : new Date(data['updatedAt']);
 
-        orders.push({
+        allOrders.push({
           id: doc.id,
           ...data,
           createdAt,
@@ -155,7 +151,8 @@ export class ManageOrdersComponent implements OnInit {
         });
       });
 
-      return { orders, totalCount };
+      // Return all fetched orders - we'll handle search filtering client-side
+      return { orders: allOrders, totalCount: allOrders.length };
     } catch (error) {
       console.error('Error fetching orders from Firestore:', error);
       throw error;
@@ -163,8 +160,6 @@ export class ManageOrdersComponent implements OnInit {
   }
 
   applyFilters(): void {
-    // Client-side filtering is now minimized since we're doing most filtering in the Firestore query
-    // We mainly handle search here which is not easily done on Firestore
     let result = [...this.orders];
 
     // Apply search (client-side filter)
@@ -176,9 +171,19 @@ export class ManageOrdersComponent implements OnInit {
         (order.customer?.email && order.customer.email.toLowerCase().includes(search)) ||
         (order.customer?.phone && order.customer.phone.toLowerCase().includes(search))
       );
+
+      // Reset to first page when filtering changes
+      this.currentPage = 1;
     }
 
     this.filteredOrders = result;
+    this.totalCount = this.filteredOrders.length;
+
+    // Log pagination values for debugging
+    console.log('Filter applied - Total Count:', this.totalCount,
+      'Items Per Page:', this.itemsPerPage,
+      'Total Pages:', Math.ceil(this.totalCount / this.itemsPerPage),
+      'Current Page:', this.currentPage);
   }
 
   changeSorting(sortBy: string): void {
@@ -195,17 +200,23 @@ export class ManageOrdersComponent implements OnInit {
   }
 
   get paginatedOrders(): any[] {
-    return this.filteredOrders;
+    // For all scenarios (search, filter, or normal), we now need to paginate the filteredOrders
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    const endIndex = Math.min(startIndex + this.itemsPerPage, this.filteredOrders.length);
+
+    // Return the paginated subset of filtered orders
+    return this.filteredOrders.slice(startIndex, endIndex);
   }
 
   get totalPages(): number {
-    return Math.ceil(this.totalCount / this.itemsPerPage);
+    if (this.totalCount === 0) return 1; // Always at least one page, even if empty
+    return Math.ceil(this.totalCount / Math.max(1, this.itemsPerPage));
   }
 
   changePage(page: number): void {
     if (page >= 1 && page <= this.totalPages) {
       this.currentPage = page;
-      this.loadOrders(); // Reload with new page
+      // No need to reload from Firestore as we have all the data client-side now
     }
   }
 
@@ -213,24 +224,16 @@ export class ManageOrdersComponent implements OnInit {
     const totalPages = this.totalPages;
 
     if (totalPages <= 7) {
-      // Return all page numbers if 7 or fewer pages
       return Array.from({ length: totalPages }, (_, i) => i + 1);
     } else {
-      // We need to handle pagination smartly
       const pages: number[] = [];
+      pages.push(1); // Always include the first page
 
-      // Always include the first and last page
-      pages.push(1);
-
-      // Add pages around the current page
       for (let i = Math.max(2, this.currentPage - 1); i <= Math.min(totalPages - 1, this.currentPage + 1); i++) {
         pages.push(i);
       }
 
-      // Add the last page
-      pages.push(totalPages);
-
-      // Sort and ensure no duplicates
+      pages.push(totalPages); // Always include the last page
       return [...new Set(pages)].sort((a, b) => a - b);
     }
   }
@@ -445,4 +448,18 @@ export class ManageOrdersComponent implements OnInit {
       default: return '';
     }
   }
+
+  // Helper function for debugging pagination
+  // testPagination(): void {
+  //   console.log({
+  //     currentPage: this.currentPage,
+  //     totalPages: this.totalPages,
+  //     totalCount: this.totalCount,
+  //     itemsPerPage: this.itemsPerPage,
+  //     filteredOrdersLength: this.filteredOrders.length,
+  //     paginatedOrdersLength: this.paginatedOrders.length,
+  //     startIndex: (this.currentPage - 1) * this.itemsPerPage,
+  //     endIndex: Math.min((this.currentPage - 1) * this.itemsPerPage + this.itemsPerPage, this.filteredOrders.length)
+  //   });
+  // }
 } 

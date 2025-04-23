@@ -5,6 +5,7 @@ import { FormsModule, ReactiveFormsModule, FormGroup, FormBuilder, Validators } 
 import { Subscription } from 'rxjs';
 import { SimpleCartService, SimpleCartItem } from '../../core/services/simple-cart.service';
 import { NavbarComponent } from '../../shared/components/navbar/navbar.component';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-cart',
@@ -24,8 +25,7 @@ export class CartComponent implements OnInit, OnDestroy {
 
   customerForm: FormGroup;
 
-  // WhatsApp business phone number (replace with your actual number)
-  private whatsappBusinessNumber: string = '9999999999'; // Format: country code (91) + phone number
+  private whatsappBusinessNumber: string = environment.whatsappBusinessNumber; // Format: country code (91) + phone number
 
   constructor(
     private cartService: SimpleCartService,
@@ -33,8 +33,9 @@ export class CartComponent implements OnInit, OnDestroy {
   ) {
     this.customerForm = this.fb.group({
       name: ['', [Validators.required]],
-      email: ['', [Validators.required, Validators.email]],
-      phone: ['', [Validators.required, Validators.pattern(/^[0-9]{10}$/)]]
+      email: ['', [Validators.email]],  // Email is optional but must be valid if provided
+      phone: ['', [Validators.required, Validators.pattern(/^[0-9]{10}$/)]],
+      address: ['', [Validators.required]]  // Address is required
     });
   }
 
@@ -55,14 +56,16 @@ export class CartComponent implements OnInit, OnDestroy {
     // Calculate subtotal
     this.subtotal = this.cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
-    // Calculate shipping (free for orders over 1000 INR)
-    this.shipping = this.subtotal > 1000 ? 0 : 99;
+    // Fixed packing and delivery charges
+    const packingCharge = 15;
+    const deliveryCharge = 40;
+    this.shipping = packingCharge + deliveryCharge; // Combined packing and delivery charges
 
-    // Calculate tax (18% GST)
-    this.tax = this.subtotal * 0.18;
+    // Remove tax calculation - no longer using tax
+    this.tax = 0;
 
     // Calculate total
-    this.total = this.subtotal + this.shipping + this.tax;
+    this.total = this.subtotal + this.shipping;
   }
 
   increaseQuantity(productId: string): void {
@@ -136,7 +139,8 @@ export class CartComponent implements OnInit, OnDestroy {
     message += '*My Information:*\n';
     message += `Name: ${customerInfo.name}\n`;
     message += `Email: ${customerInfo.email}\n`;
-    message += `Phone: ${customerInfo.phone}\n\n`;
+    message += `Phone: ${customerInfo.phone}\n`;
+    message += `Address: ${customerInfo.address}\n\n`;
 
     // Organize items by type (chains and pendants)
     const chains = this.cartItems.filter(item => item.type === 'chain');
@@ -203,10 +207,10 @@ export class CartComponent implements OnInit, OnDestroy {
 
     // Add order summary
     message += '*Order Summary:*\n';
-    message += `Subtotal: ₹${this.subtotal.toFixed(2)}\n`;
-    message += `Shipping: ₹${this.shipping.toFixed(2)}\n`;
-    message += `Tax (18%): ₹${this.tax.toFixed(2)}\n`;
-    message += `*Total: ₹${this.total.toFixed(2)}*\n\n`;
+    message += `Items Total: ₹${this.subtotal.toFixed(2)}\n`;
+    message += `Packing Charge: ₹15.00\n`;
+    message += `Delivery Charge: ₹40.00\n`;
+    message += `*Total Amount: ₹${this.total.toFixed(2)}*\n\n`;
 
     // Add closing
     message += "I'd like to confirm this order. Please let me know the next steps for payment and delivery.\n\n";

@@ -17,7 +17,7 @@ export interface Product {
   customProperties?: Record<string, any>;
 }
 
-export type ProductCategory = 'chain' | 'pendant' | 'combination' | 'accessory';
+export type ProductCategory = 'chain' | 'pendant' | 'combination';
 
 export interface ProductDetails {
   material?: string;

@@ -1,7 +1,17 @@
 <div class="manage-orders-page">
   <div class="page-header">
-    <h2>Manage Orders</h2>
-    <p>View and manage all customer orders in one place.</p>
+    <div class="header-content">
+      <div class="header-text">
+        <h2>Manage Orders</h2>
+        <p>View and manage all customer orders in one place.</p>
+      </div>
+      <div class="export-button-container">
+        <button class="export-button" (click)="openExportModal()">
+          <i class="material-icons">file_download</i>
+          Export Orders
+        </button>
+      </div>
+    </div>
   </div>
 
   <!-- Error message -->
@@ -26,9 +36,8 @@
     <div class="filter-controls">
       <div class="filter-group">
         <label>Status:</label>
-        <select [(ngModel)]="statusFilter" (change)="applyFilters()">
+        <select [(ngModel)]="statusFilter" (change)="loadOrders()">
           <option value="all">All Statuses</option>
-          <option value="pending">Pending</option>
           <option value="confirmed">Confirmed</option>
           <option value="processing">Processing</option>
           <option value="shipped">Shipped</option>
@@ -39,7 +48,7 @@
 
       <div class="filter-group">
         <label>Date:</label>
-        <select [(ngModel)]="dateFilter" (change)="applyFilters()">
+        <select [(ngModel)]="dateFilter" (change)="loadOrders()">
           <option value="all">All Time</option>
           <option value="today">Today</option>
           <option value="week">Last 7 Days</option>
@@ -91,7 +100,7 @@
           <td>{{ order.totalAmount | currency:'INR':'symbol':'1.2-2' }}</td>
           <td>
             <span class="status-badge" [ngClass]="getStatusClass(order.status)">
-              {{ order.status }}
+              {{ order.status | titlecase }}
             </span>
           </td>
           <td>
@@ -121,7 +130,7 @@
     <i class="material-icons">inbox</i>
     <h3>No Orders Found</h3>
     <p>We couldn't find any orders matching your filters. Try adjusting your search criteria.</p>
-    <button (click)="statusFilter = 'all'; dateFilter = 'all'; searchTerm = ''; applyFilters();">Reset Filters</button>
+    <button (click)="statusFilter = 'all'; dateFilter = 'all'; searchTerm = ''; loadOrders();">Reset Filters</button>
   </div>
 
   <!-- Debug info
@@ -214,7 +223,7 @@
               <span class="label">Order Status:</span>
               <span class="value">
                 <span class="status-badge" [ngClass]="getStatusClass(selectedOrder.status)">
-                  {{ selectedOrder.status }}
+                  {{ selectedOrder.status | titlecase }}
                 </span>
               </span>
             </div>
@@ -274,8 +283,14 @@
               <div>{{ selectedOrder.subtotal | currency:'INR':'symbol':'1.2-2' }}</div>
             </div>
             <div class="summary-row">
-              <div>Tax (18% GST)</div>
-              <div>{{ selectedOrder.tax | currency:'INR':'symbol':'1.2-2' }}</div>
+              <div>Packing Charges</div>
+              <div>{{ selectedOrder.packingCharges !== undefined ? selectedOrder.packingCharges : 15.00 |
+                currency:'INR':'symbol':'1.2-2' }}</div>
+            </div>
+            <div class="summary-row">
+              <div>Delivery Charges</div>
+              <div>{{ selectedOrder.deliveryCharges !== undefined ? selectedOrder.deliveryCharges : 40.00 |
+                currency:'INR':'symbol':'1.2-2' }}</div>
             </div>
             <div class="summary-row total">
               <div>Total</div>
@@ -404,12 +419,22 @@
               <div>{{ calculateTotal(editedOrder) | currency:'INR':'symbol':'1.2-2' }}</div>
             </div>
             <div class="summary-row">
-              <div>Tax (18% GST)</div>
-              <div>{{ calculateTotal(editedOrder) * 0.18 | currency:'INR':'symbol':'1.2-2' }}</div>
+              <div>Packing Charges</div>
+              <div>
+                <input type="number" [(ngModel)]="editedOrder.packingCharges" min="0" step="0.01" style="width: 100px;"
+                  [ngModelOptions]="{updateOn: 'blur'}" (blur)="formatCharges()">
+              </div>
+            </div>
+            <div class="summary-row">
+              <div>Delivery Charges</div>
+              <div>
+                <input type="number" [(ngModel)]="editedOrder.deliveryCharges" min="0" step="0.01" style="width: 100px;"
+                  [ngModelOptions]="{updateOn: 'blur'}" (blur)="formatCharges()">
+              </div>
             </div>
             <div class="summary-row total">
               <div>Total</div>
-              <div>{{ calculateTotal(editedOrder) * 1.18 | currency:'INR':'symbol':'1.2-2' }}</div>
+              <div>{{ calculateEditedOrderTotal() | currency:'INR':'symbol':'1.2-2' }}</div>
             </div>
           </div>
         </div>
@@ -418,6 +443,49 @@
       <div class="modal-footer">
         <button class="secondary-btn" (click)="closeEditModal()">Cancel</button>
         <button class="primary-btn" (click)="saveOrderChanges()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Export Orders Modal -->
+  <div class="modal-overlay" *ngIf="showExportModal" (click)="closeExportModal()">
+    <div class="modal-content export-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Export Orders</h3>
+        <button class="close-btn" (click)="closeExportModal()">
+          <i class="material-icons">close</i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <p class="export-description">
+          Export orders data to Excel file for the selected time period. Choose one of the following options:
+        </p>
+
+        <div class="export-options">
+          <div class="option-container">
+            <input type="radio" id="export-1-month" name="exportPeriod" [(ngModel)]="exportPeriod" value="1">
+            <label for="export-1-month">Last 1 Month</label>
+          </div>
+
+          <div class="option-container">
+            <input type="radio" id="export-3-months" name="exportPeriod" [(ngModel)]="exportPeriod" value="3">
+            <label for="export-3-months">Last 3 Months</label>
+          </div>
+
+          <div class="option-container">
+            <input type="radio" id="export-6-months" name="exportPeriod" [(ngModel)]="exportPeriod" value="6">
+            <label for="export-6-months">Last 6 Months</label>
+          </div>
+        </div>
+
+        <div class="export-actions">
+          <button class="cancel-btn" (click)="closeExportModal()">Cancel</button>
+          <button class="export-btn" (click)="exportOrders()">
+            <i class="material-icons">file_download</i>
+            Export
+          </button>
+        </div>
       </div>
     </div>
   </div>
